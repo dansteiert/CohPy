@@ -115,3 +115,21 @@ def count_logicals(document):
     if i in ["KOUI", "KOUS", "KON", "KOKOM"]:
       log_count += 1
   return log_count
+
+
+def type_token_ratio(document):
+  # count unique words against their repetitions.
+  # split into Nouns and non-Noun content words
+  counter_dict = {}
+  counter_dict_non_Noun = {}
+  for i in document:
+    if i in ["NN", "NE"]:
+      counter_dict[i] = counter_dict.get(i, 0) + 1
+    elif i in ["ADJA", "ADJD", "ADV"] or i[0] =="V": #, "VVFIN, VVIMP", "VVINF", "VVIZU", "VVPP"]
+      counter_dict_non_Noun[i] = counter_dict_non_Noun.get(i, 0) + 1
+
+  return (len(counter_dict)/sum(counter_dict.values()), \
+         len(counter_dict_non_Noun)/sum(counter_dict_non_Noun.items()))
+
+
+# Further Reading Page 6 Polysemy and Hypernym
