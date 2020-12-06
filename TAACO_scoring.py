@@ -13,3 +13,6 @@ words in each segment
 
 scoring is done in TAACO with adjacent Segments and with the next two segments (1,2), (2,3) or (1, 2+3), (2, 3+4)
 '''
+from w2v_model import *
+from LSA_model import *
+from LDA_model import *
