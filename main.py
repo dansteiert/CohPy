@@ -22,6 +22,10 @@
 import treetaggerwrapper as tt
 from COhMatrix_scorings import *
 from Treetagger import POS_tagger
+from model_preprocessing import *
+from w2v_model import *
+from LDA_model import *
+from LSA_model import *
 import os
 import numpy as np
 import pandas as pd
@@ -42,14 +46,20 @@ print("# Logicals: ", count_logicals(document_token=tags))
 print("type token ratio: ", type_token_ratio(document_token=tags))
 
 co_reference_matrix(document_tag=tags, document_lemma=lemmas)
-print(Flesch_Reading_Ease(document_words=words, document_tags=tags, document_syllables=syll_count))
-print(Flescher_Kincaid_Grad_Level(document_words=words, document_tags=tags, document_syllables=syll_count))
+print(Flescher_Reading_Ease(document_words=words, document_tags=tags, document_syllables=syll_count))
+print(Flescher_Kincaid_Grade_Level(document_words=words, document_tags=tags, document_syllables=syll_count))
+
+
+######## Model building
+# TODO: structure for document vs corpus
+dictionary, doc_freq_matrix, tfidf = preprocessing(corpus_tokens=lemmas)
+lsa_model = LSA(df_matrix=doc_freq_matrix, dictionary=dictionary)
+lda_model = LDA(df_matrix=doc_freq_matrix, dictionary=dictionary)
 
 
 
 # TODO:
 #  CohMatrix
-#  Needs:
 #  o A database of lots of German or what ever other language, texts.
 #       - Wordfrequency/Familarity of words
 #       -
@@ -61,3 +71,7 @@ print(Flescher_Kincaid_Grad_Level(document_words=words, document_tags=tags, docu
 #       -Polysemy: how many meanings has a word
 #  o How to retive the kind of sentence (or parts) one has NP/ VP
 #  o set of causal verbs and particles -> causal cohesion
+#  TACCO:
+#  o DB of texts
+#  generally extend code to n-grams!
+#  adapt for multiple languages (as far as possible)

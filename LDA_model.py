@@ -7,3 +7,15 @@ Assumption: related concepts have similar topic probabilities based on underlyin
 What does this imply?
 That the more words from a given topic a drawn, the larger the cohesion is?
 '''
+
+from gensim.models import LdaModel
+
+
+def LDA(df_matrix, dictionary):
+    '''
+    Build the LDA model
+    :param df_matrix: document term matrix
+    :param dictionary: dictionary
+    :return: the build model
+    '''
+    return LdaModel(corpus=df_matrix, id2word=dictionary, num_topics=10, iterations=100)

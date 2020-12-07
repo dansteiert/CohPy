@@ -4,10 +4,12 @@ from gensim import corpora
 
 
 
-dictionary = corpora.Dictionary(tokens)
-dt_matrix = [dictionary.doc2bow(doc) for doc in tokens]
+def preprocessing(corpus_tokens):
+    dictionary = corpora.Dictionary(corpus_tokens)
+    doc_freq_matrix = [dictionary.doc2bow(doc) for doc in corpus_tokens]
 
 
 
-vectorizer = TfidfVectorizer(tokenizer=lambda x: x, stop_words=None, lowercase=False, vocabulary=dictionary)
-tfidf = vectorizer.fit_transform(tokens)
+    vectorizer = TfidfVectorizer(tokenizer=lambda x: x, stop_words=None, lowercase=False, vocabulary=dictionary)
+    tfidf = vectorizer.fit_transform(corpus_tokens)
+    return (dictionary, doc_freq_matrix, tfidf)

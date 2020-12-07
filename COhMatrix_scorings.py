@@ -102,7 +102,7 @@ def type_token_ratio(document_token, noun_tags=["NN", "NE"], other_tags_to_searc
   return (ratio, ratio_nonN)
 
 
-def Flesch_Reading_Ease(document_words, document_tags, document_syllables, punctuation_tag_group=["$."]):
+def Flescher_Reading_Ease(document_words, document_tags, document_syllables, punctuation_tag_group=["$."]):
   if len(document_words) < 200:
     return None
   num_sentences = sum([document_tags.count(i) for i in punctuation_tag_group])
@@ -110,7 +110,7 @@ def Flesch_Reading_Ease(document_words, document_tags, document_syllables, punct
   ASW = sum(document_syllables)/len(document_words) # # ratio Syllables/Words
   return 206.835 - 1.015 * ASL - 84.6 * ASW
 
-def Flescher_Kincaid_Grad_Level(document_words, document_tags, document_syllables, punctuation_tag_group=["$."]):
+def Flescher_Kincaid_Grade_Level(document_words, document_tags, document_syllables, punctuation_tag_group=["$."]):
   if len(document_words) < 200:
     return None
   num_sentences = sum([document_tags.count(i) for i in punctuation_tag_group])
