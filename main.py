@@ -33,10 +33,24 @@ import pandas as pd
 t_tagger = tt.TreeTagger(TAGLANG='de', TAGDIR="C:\\TreeTagger")
 text = "Hallöchen Manfred, ich, der Titus, möchte dir mal was sagen: 'Ich find das Toll'. Manfred schaute betröppelt in die Röhre und konnte sein Glück kaum fassen. Schon am nächsten Morgen würde er in einem Flieger nach Hause fliegen."
 (words, tags, lemmas) = POS_tagger(tagger=t_tagger, document=text)
-word_len = word_length(document_word=words)
-syll_count = syllable_count(document_word=words)
-print(len(words), len(tags), len(lemmas), len(word_len), len(syll_count))
+# print(words)
+# print(tags)
+# print(lemmas)
+# # w_by_sent = []
+# # t_by_sent = []
+# # l_by_sent = []
+# # for w, t, l in zip(words, tags, lemmas):
+# #     if t == "$.":
+# #         # w_by_sent.append(w)
+# #         # t_by_sent.append(t)
+# #         l_by_sent.append(l)
 
+
+
+word_len = word_length(document_word=words).mean()
+syll_count = syllable_count(document_word=words).mean()
+# print(len(words), len(tags), len(lemmas), len(word_len), len(syll_count))
+#
 print(pd.DataFrame(
     data={"Words": words, "Tags": tags, "Lemma": lemmas, "Word Length": word_len, "Syllabel count": syll_count}))
 
@@ -50,19 +64,25 @@ print(Flescher_Reading_Ease(document_words=words, document_tags=tags, document_s
 print(Flescher_Kincaid_Grade_Level(document_words=words, document_tags=tags, document_syllables=syll_count))
 
 
-######## Model building
-# TODO: structure for document vs corpus
-dictionary, doc_freq_matrix, tfidf = preprocessing(corpus_tokens=lemmas)
-lsa_model = LSA(df_matrix=doc_freq_matrix, dictionary=dictionary)
-lda_model = LDA(df_matrix=doc_freq_matrix, dictionary=dictionary)
+#
+#
+#
+#
+# ######## Model building
+# # TODO: structure for document vs corpus
+# dictionary, doc_freq_matrix, tfidf = preprocessing(corpus_tokens=lemmas)
+# lsa_model = LSA(df_matrix=doc_freq_matrix, dictionary=dictionary)
+# lda_model = LDA(df_matrix=doc_freq_matrix, dictionary=dictionary)
 
 
-
+# w2v_model = load_w2v("data\\250kGLEC_sg500.vec")
+# for index, i in enumerate(l_by_sent):
+#     for j in l_by_sent[index:]:
+#         print(sentence_similarity(w2v=w2v_model, sent_a=i, sent_b=j))
 # TODO:
 #  CohMatrix
 #  o A database of lots of German or what ever other language, texts.
 #       - Wordfrequency/Familarity of words
-#       -
 #  o A dictionary with many words and Scores for:
 #       - Concrete/Absrtactness -> Hypernmys
 #       - Ease of Imagability
