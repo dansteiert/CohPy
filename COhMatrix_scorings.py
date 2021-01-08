@@ -87,6 +87,19 @@ def count_logicals(document_tags, accept_tags=[], accept_tags_start_with=["K"],
   return logical_count
 
 
+def mean_sentence_length(document_tags, accept_tags=["$."], accept_tags_start_with=[],
+                         exclude_tags=[], exclude_tags_start_with=[]):
+    sent_length = []
+    temp_sent_length = 0
+    for t in document_tags:
+        if check_tags(tag=t, accept_tags=accept_tags, accept_tags_start_with=accept_tags_start_with,
+                      exclude_tags=exclude_tags, exclude_tags_start_with=exclude_tags_start_with):
+            sent_length.append(temp_sent_length)
+        else:
+            temp_sent_length += 1
+    return mean_of_list(sent_length)
+
+
 
 def Flescher_Reading_Ease(document_words, document_tags, document_syllables, accept_tags=["$."], accept_tags_start_with=[], 
                           exclude_tags=[], exclude_tags_start_with=[]):
@@ -313,3 +326,6 @@ def co_reference_matrix(document_tag, document_lemma,  accept_tags=[], accept_ta
   # print(co_reference_dist)
   # print(co_reference_exists)
   return (local_corefererence_cohesion, global_corefererence_cohesion, co_reference_dist_sum)
+
+def mean_of_list(l):
+    return sum(l)/len(l)
