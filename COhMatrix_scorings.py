@@ -74,7 +74,7 @@ def casual_cohesion(document):
   return None
 
 
-def count_logicals(document_tags, accept_tags=[], accept_tags_start_with=["K"], 
+def count_logicals(document_tags, accept_tags=["KON", "KOKOM"], accept_tags_start_with=[],
                           exclude_tags=[], exclude_tags_start_with=[]):
   # high count means more "work"
   # KOUI:subordinating  conjunction  followed|  by \zu" and innitive um [zu leben], anstatt [zu fragen]
