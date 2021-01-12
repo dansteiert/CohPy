@@ -8,7 +8,7 @@ https://www.youtube.com/watch?v=ERibwqs9p38
 
 Distance evalution by "cosine similarity score"
 '''
-from gensim.models import Word2Vec
+from gensim.models import Word2Vec, KeyedVectors
 import gensim
 import multiprocessing
 
@@ -23,20 +23,33 @@ def train_word2vec(training_data):
     return w2v
 
 def load_w2v(path_to_model):
-    w2v = gensim.models.Word2Vec.load(path_to_model)
+    w2v = KeyedVectors.load_word2vec_format(path_to_model)
     return w2v
 
 def sentence_similarity(w2v, sent_a, sent_b):
     ## Greedy always take the closest related value?
+    temp_sent_b = sent_b.copy()
+
     sent_sim = 0
     for i in sent_a:
         temp_max = 0
-        for j in sent_b:
-            sim = w2v.similarity(i, j)
-            if sim > temp_max:
-                temp_max = sim
+        elem = -1
+        for index, j in enumerate(temp_sent_b):
+            try:
+                sim = w2v.similarity(i, j)
+                if sim > temp_max:
+                    temp_max = sim
+                    elem = index
+            except:
+                continue
+        temp_sent_b.pop(elem)
+        if len(temp_sent_b) == 0:
+            break
         sent_sim += temp_max
-    sent_sim /= len(sent_a)
+    try:
+        sent_sim /= len(sent_a)
+    except:
+        pass
     return sent_sim
 
 

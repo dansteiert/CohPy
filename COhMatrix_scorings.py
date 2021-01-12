@@ -185,31 +185,20 @@ def content_functional_ratio(document_tags, content_tags=[], content_tags_start_
   return len(tag_list_content)
 
 
-def type_token_ratio(document_tags, noun_tags=[], noun_tags_start_with=["N"], exclude_noun_tags=[],
-                             exclude_noun_tags_start_with =[], non_noun_tags=["ADJA", "ADJD", "ADV"],
-                             non_noun_tags_start_with=["V"], exclude_non_noun_tags=[],
-                             exclude_non_noun_tags_start_with =[]):
+def type_token_ratio(document_tags, accept_tags=[], accept_tags_start_with=["N"], exclude_tags=[],
+                             exclude_tags_start_with =[]):
   # count unique words against their repetitions.
   # split into Nouns and non-Noun content words
-  tag_list_nouns= search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=noun_tags,
-                                    accept_tags_start_with=noun_tags_start_with, exclude_tags=exclude_noun_tags,
-                                    exclude_tags_start_with=exclude_noun_tags_start_with)
-  tag_list_non_nouns= search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=non_noun_tags,
-                                    accept_tags_start_with=non_noun_tags_start_with, exclude_tags=exclude_non_noun_tags,
-                                    exclude_tags_start_with=exclude_non_noun_tags_start_with)
+  tag_list_nouns= search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=accept_tags,
+                                    accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
+                                    exclude_tags_start_with=exclude_tags_start_with)
   count_dict = to_count_dict(aggregate_list=tag_list_nouns)
-  count_dict_non_nouns = to_count_dict(aggregate_list=tag_list_non_nouns)
-
-
   if len(count_dict) == 0:
     ratio = 0
   else:
     ratio = len(count_dict)/sum(count_dict.values())
-  if len(count_dict_non_nouns) == 0:
-    ratio_none = 0
-  else:
-    ratio_none = len(count_dict_non_nouns)/sum(count_dict_non_nouns.values())
-  return (ratio, ratio_none)
+
+  return ratio
 
 
 def count_puncutation(document_tags, accept_tags=[], accept_tags_start_with=["$"], exclude_tags=[],
@@ -227,7 +216,6 @@ def tag_overlap(sent_a_tags, sent_a_lemma, sent_b_tags, sent_b_lemma, accept_tag
   :param sent_a_lemma: lemma list of sentance/ pargraph/.. a
   :param sent_b_tags: tag list of sentance/ pargraph/.. b
   :param sent_b_lemma: lemma list of sentance/ pargraph/.. b
-  :param tags: choose a set of tags, for which the overlap should be calculated
   :return: number of overlapping lemma
   '''
   lemma_set_sent_a = set(search_tag_set(aggregate=sent_a_lemma, tags=sent_a_tags, accept_tags=accept_tags,
@@ -329,3 +317,8 @@ def co_reference_matrix(document_tag, document_lemma,  accept_tags=[], accept_ta
 
 def mean_of_list(l):
     return sum(l)/len(l)
+
+def variance_of_list(l):
+    m = mean_of_list(l)
+    l_2 = [i**2 for i in l]
+    return (sum(l_2) - len(l) * m**2) / (len(l)-1)

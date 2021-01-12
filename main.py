@@ -26,6 +26,7 @@ from model_preprocessing import *
 from w2v_model import *
 from LDA_model import *
 from LSA_model import *
+from Word_scorings import *
 import os
 import numpy as np
 import pandas as pd
@@ -36,14 +37,20 @@ text = "Hallöchen Manfred, ich, der Titus, möchte dir mal was sagen: 'Ich find
 # print(words)
 # print(tags)
 # print(lemmas)
-# # w_by_sent = []
-# # t_by_sent = []
-# # l_by_sent = []
-# # for w, t, l in zip(words, tags, lemmas):
-# #     if t == "$.":
-# #         # w_by_sent.append(w)
-# #         # t_by_sent.append(t)
-# #         l_by_sent.append(l)
+w_by_sent = []
+# t_by_sent = []
+l_by_sent = []
+temp_l = []
+# temp_w = []
+for w, t, l in zip(words, tags, lemmas):
+    if t == "$.":
+        l_by_sent.append(temp_l)
+        # w_by_sent.append(temp_w)
+        temp_l=[]
+        # temp_w=[]
+    else:
+        temp_l.append(l)
+        # temp_w.append(w)
 
 
 
@@ -76,9 +83,26 @@ print(Flescher_Kincaid_Grade_Level(document_words=words, document_tags=tags, doc
 
 
 # w2v_model = load_w2v("data\\250kGLEC_sg500.vec")
-# for index, i in enumerate(l_by_sent):
-#     for j in l_by_sent[index:]:
-#         print(sentence_similarity(w2v=w2v_model, sent_a=i, sent_b=j))
+for index, (l) in enumerate(l_by_sent):
+    for l_2 in l_by_sent[index + 1:]:
+        # print(l, w)
+        # print(l_2, w_2)
+        print("-----------------------")
+        print(sentence_similarity(w2v=w2v_model, sent_a=l, sent_b=l_2))
+        # print(sentence_similarity(w2v=w2v_model, sent_a=w, sent_b=w_2))
+
+
+## concretness:
+df_conc = load_score_file("data\\350k_ims_sorted copy.dat")
+conc = []
+for i in lemmas:
+    temp = Concretness(lemma=i, df=df_conc)
+    if temp is not None:
+        conc.append(temp)
+print(sum(conc), mean_of_list(conc))
+print(variance_of_list(conc))
+
+
 # TODO:
 #  CohMatrix
 #  o A database of lots of German or what ever other language, texts.
