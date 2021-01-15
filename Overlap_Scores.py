@@ -17,7 +17,7 @@ def tag_overlap(sent_a_tags, sent_a_lemma, sent_b_tags, sent_b_lemma, accept_tag
                                         accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
                                         exclude_tags_start_with=exclude_tags_start_with))
 
-  overlapping_lemma = lemma_set_sent_a.intersect(lemma_set_sent_b)
+  overlapping_lemma = lemma_set_sent_a.intersection(lemma_set_sent_b)
   return len(overlapping_lemma)
 
 

@@ -3,7 +3,7 @@ from Helper_functions import *
 
 def pronoun_resolution(document_tags, nouns_accept_tags=[], nouns_accept_tags_start_with=["N"], nouns_exclude_tags=[],
                        nouns_exclude_tags_start_with=[],
-                       pronouns_accept_tags=["ADJA", "ADJD", "ADV"], pronouns_accept_start_with=["P"],
+                       pronouns_accept_tags=["ADJA", "ADJD", "ADV"], pronouns_accept_tags_start_with=["P"],
                        pronouns_exclude_tags=["PTK"],
                        pronouns_exclude_tags_start_with=[]):
     # This Task, wants to map pronouns with their respectiv "owners"
@@ -11,13 +11,13 @@ def pronoun_resolution(document_tags, nouns_accept_tags=[], nouns_accept_tags_st
     # Pronoun density  consists  of  the  proportion  of  noun  phrases(NPs, as defined  by  a  syntactic
     # parser, which  will  be  described  later) that  are  captured by  pronouns(as defined  by  the  Brill  POS  tagger).
 
-    tag_list_nouns = search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=noun_tags,
-                                    accept_tags_start_with=noun_tags_start_with, exclude_tags=exclude_noun_tags,
-                                    exclude_tags_start_with=exclude_noun_tags_start_with)
-    tag_list_pronouns = search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=pronoun_tags,
-                                       accept_tags_start_with=pronoun_tags_start_with,
-                                       exclude_tags=exclude_pronoun_tags,
-                                       exclude_tags_start_with=exclude_pronoun_tags_start_with)
+    tag_list_nouns = search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=nouns_accept_tags,
+                                    accept_tags_start_with=nouns_accept_tags_start_with, exclude_tags=nouns_exclude_tags,
+                                    exclude_tags_start_with=nouns_exclude_tags_start_with)
+    tag_list_pronouns = search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=pronouns_accept_tags,
+                                       accept_tags_start_with=pronouns_accept_tags_start_with,
+                                       exclude_tags=pronouns_exclude_tags,
+                                       exclude_tags_start_with=pronouns_exclude_tags_start_with)
     if len(tag_list_pronouns) > 0:
         return len(tag_list_nouns) / len(tag_list_pronouns)
     return len(tag_list_nouns)

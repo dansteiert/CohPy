@@ -2,6 +2,7 @@ import treetaggerwrapper as tt
 import os
 import numpy as np
 import pandas as pd
+import datetime
 
 ## Import Own Functions:
 from Word_scorings import *
@@ -16,7 +17,7 @@ from Ratio_Scores import *
 from Count_Scores import *
 from Overlap_Scores import *
 
-
+print(datetime.datetime.now(), "program loaded")
 ## enter the text:
 from nltk.corpus import gutenberg
 text = gutenberg.raw("carroll-alice.txt")
@@ -132,7 +133,7 @@ else:
     # return -1
 t_tagger = tt.TreeTagger(TAGLANG=select_language, TAGDIR="C:\\TreeTagger")
 
-
+print(datetime.datetime.now(), "preprocessing started")
 # <editor-fold desc="Preprocessing">
 (words, tags, lemma) = POS_tagger(tagger=t_tagger, document=text)
 
@@ -147,6 +148,7 @@ tags_by_sentence = split_into_sentences(aggregator_list=tags, document_tags=tags
 # </editor-fold>
 
 
+print(datetime.datetime.now(), "Count Scores started")
 # <editor-fold desc="Count Scores">
 mean_word_length = word_length(document_word=words)
 mean_syllables = syllable_count(document_word=words)
@@ -171,6 +173,7 @@ mean_lexical_diversity = mean_of_list([lexical_diversity(document_tags=i, accept
 # </editor-fold>
 
 
+print(datetime.datetime.now(), "Ratio Scores started")
 # <editor-fold desc="Ratio Scores">
 type_token_ratio_nouns = type_token_ratio(document_tags=tags, accept_tags=nouns_accept_tags,
                                           accept_tags_start_with=nouns_accept_tags_start_with, exclude_tags=nouns_exclude_tags,
@@ -178,7 +181,7 @@ type_token_ratio_nouns = type_token_ratio(document_tags=tags, accept_tags=nouns_
 type_token_ratio_adverbs = type_token_ratio(document_tags=tags, accept_tags=adverbs_accept_tags,
                                           accept_tags_start_with=adverbs_accept_tags_start_with, exclude_tags=adverbs_exclude_tags,
                                           exclude_tags_start_with =adverbs_exclude_tags_start_with)
-type_token_ratio_adjectivess = type_token_ratio(document_tags=tags, accept_tags=adjectives_accept_tags,
+type_token_ratio_adjectives = type_token_ratio(document_tags=tags, accept_tags=adjectives_accept_tags,
                                           accept_tags_start_with=adjectives_accept_tags_start_with, exclude_tags=adjectives_exclude_tags,
                                           exclude_tags_start_with =adjectives_exclude_tags_start_with)
 type_token_ratio_verbs = type_token_ratio(document_tags=tags, accept_tags=verbs_accept_tags,
@@ -188,30 +191,40 @@ type_token_ratio_verbs = type_token_ratio(document_tags=tags, accept_tags=verbs_
 pronoun_noun_ratio = pronoun_resolution(document_tags=tags, nouns_accept_tags=nouns_accept_tags,
                                         nouns_accept_tags_start_with=nouns_accept_tags_start_with,
                                         nouns_exclude_tags=nouns_exclude_tags, nouns_exclude_tags_start_with=nouns_exclude_tags_start_with,
-                                        pronouns_accept_tags=pronouns_accept_tags, pronouns_accept_start_with=pronouns_accept_tags_start_with,
+                                        pronouns_accept_tags=pronouns_accept_tags, pronouns_accept_tags_start_with=pronouns_accept_tags_start_with,
                                         pronouns_exclude_tags=pronouns_exclude_tags, pronouns_exclude_tags_start_with=pronouns_exclude_tags_start_with)
 
 # TODO: add content_functional_ratio
 # </editor-fold>
 
 
+print(datetime.datetime.now(), "Overlap Scores started")
 # <editor-fold desc="Overlaps">
 nouns_overlap = overlap_matrix(lemma_by_sentence=lemma_by_sentence, tags_by_sentence=tags_by_sentence, accept_tags=nouns_accept_tags,
                                accept_tags_start_with=nouns_accept_tags_start_with, exclude_tags=nouns_exclude_tags,
                                exclude_tags_start_with =nouns_exclude_tags_start_with)
 ## Not Sure about Pronouns
+print(datetime.datetime.now(), "Noun Overlap Scores finished")
 pronouns_overlap = overlap_matrix(lemma_by_sentence=lemma_by_sentence, tags_by_sentence=tags_by_sentence, accept_tags=pronouns_accept_tags,
                                accept_tags_start_with=pronouns_accept_tags_start_with, exclude_tags=pronouns_exclude_tags,
                                exclude_tags_start_with =pronouns_exclude_tags_start_with)
+print(datetime.datetime.now(), "Pronoun Overlap Scores finished")
+
 adverbs_overlap = overlap_matrix(lemma_by_sentence=lemma_by_sentence, tags_by_sentence=tags_by_sentence, accept_tags=adverbs_accept_tags,
                                  accept_tags_start_with=adverbs_accept_tags_start_with, exclude_tags=adverbs_exclude_tags,
                                  exclude_tags_start_with =adverbs_exclude_tags_start_with)
+print(datetime.datetime.now(), "Adverb Overlap Scores finished")
+
 adjectives_overlap = overlap_matrix(lemma_by_sentence=lemma_by_sentence, tags_by_sentence=tags_by_sentence, accept_tags=adjectives_accept_tags,
                                     accept_tags_start_with=adjectives_accept_tags_start_with, exclude_tags=adjectives_exclude_tags,
                                     exclude_tags_start_with =adjectives_exclude_tags_start_with)
+print(datetime.datetime.now(), "Adjective Overlap Scores finished")
+
 verbs_overlap = overlap_matrix(lemma_by_sentence=lemma_by_sentence, tags_by_sentence=tags_by_sentence, accept_tags=verbs_accept_tags,
                                accept_tags_start_with=verbs_accept_tags_start_with, exclude_tags=verbs_exclude_tags,
                                exclude_tags_start_with =verbs_exclude_tags_start_with)
+print(datetime.datetime.now(), "Verb Overlap Scores finished")
+
 word_repetitions = np.zeros((len(lemma_by_sentence), len(lemma_by_sentence)))
 for index_r, (noun, pronoun, adverb, adjective, verb) in enumerate(zip(nouns_overlap, pronouns_overlap, adverbs_overlap, adjectives_overlap, verbs_overlap)):
     for index_c, (n, p, adv, adj, v) in enumerate(zip(noun, pronoun, adverb, adjective, verb)):
@@ -221,6 +234,7 @@ repeated_words = np.sum(word_repetitions)
 # </editor-fold>
 
 
+print(datetime.datetime.now(), "Concretness Score started")
 # <editor-fold desc="Concretness Score">
 df_conc = load_score_file("data\\350k_ims_sorted copy.dat")
 hitrate_conc = 0
@@ -235,6 +249,7 @@ mean_concretness = mean_of_list(conc)
 # </editor-fold>
 
 
+print(datetime.datetime.now(), "Sentiment Overlap started")
 # <editor-fold desc="Sentiment Overlap">
 # w2v_model = load_w2v("data\\250kGLEC_sg500.vec")
 # sentiment_overlap = overlap_matrix_sentiment(w2v_model=w2v_model, lemma_by_sentence=lemma_by_sentence,
@@ -245,6 +260,7 @@ mean_concretness = mean_of_list(conc)
 # </editor-fold>
 
 
+print(datetime.datetime.now(), "Other Scores (3) started")
 # <editor-fold desc="Other Scores">
 co_ref = co_reference_matrix(document_tag=tags, document_lemma=lemma)
 FRE = Flescher_Reading_Ease(document_words=words, document_tags=tags, document_syllables=mean_syllables)
@@ -252,6 +268,7 @@ FKGL = Flescher_Kincaid_Grade_Level(document_words=words, document_tags=tags, do
 # </editor-fold>
 
 
+print(datetime.datetime.now(), "Topic Modeling started")
 # <editor-fold desc="Topic Modeling">
 # TODO: redo with LDA Mallet!
 # ######## Model building
@@ -263,10 +280,31 @@ FKGL = Flescher_Kincaid_Grade_Level(document_words=words, document_tags=tags, do
 
 
 
+print(datetime.datetime.now(), "Result output")
+list_of_results = [mean_word_length, mean_syllables, count_logicals, count_conjugations, mean_sent_length,
+                   mean_punctuations, mean_lexical_diversity, type_token_ratio_nouns,
+                   type_token_ratio_verbs, type_token_ratio_adverbs, type_token_ratio_adjectives, hitrate_conc,
+                   mean_concretness, FRE, FKGL, repeated_words]
+
+list_of_results_names = ["mean_word_length", "mean_syllables", "count_logicals", "count_conjugations", "mean_sent_length",
+                   "mean_punctuations", "mean_lexical_diversity", "type_token_ratio_nouns",
+                   "type_token_ratio_verbs", "type_token_ratio_adverbs", "type_token_ratio_adjectives", "hitrate_conc",
+                   "mean_concretness", "FRE", "FKGL", "repeated_words"]
+
+for name, value in zip(list_of_results_names, list_of_results):
+    print("%s: %.4f" % (name, value))
 
 
+print("\n#####################\nMatrices\n##############################\n")
+
+list_of_matrices = [co_ref, nouns_overlap, pronouns_overlap, verbs_overlap, adverbs_overlap, adjectives_overlap]
+list_of_matrices_names = ["co_ref", "nouns_overlap", "pronouns_overlap", "verbs_overlap", "adverbs_overlap", "adjectives_overlap"]
+for name, value in zip(list_of_matrices_names, list_of_matrices):
+    print("\n#####################\n%s\n##############################\n" % name)
+    print(value)
 
 
+print(datetime.datetime.now(), "Finished")
 
 # TODO:
 #  CohMatrix
