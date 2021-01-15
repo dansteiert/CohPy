@@ -1,6 +1,9 @@
 from Helper_functions import *
 from w2v_model import sentence_similarity
 import numpy as np
+import datetime
+
+
 def tag_overlap(sent_a_tags, sent_a_lemma, sent_b_tags, sent_b_lemma, accept_tags=[], accept_tags_start_with=["N"],
                 exclude_tags=[], exclude_tags_start_with=[]):
   '''
@@ -35,8 +38,12 @@ def word_repetition(document_lemma, document_tags, accept_tags=[], accept_tags_s
 
 def overlap_matrix(lemma_by_sentence, tags_by_sentence, accept_tags=[], accept_tags_start_with=[],
                    exclude_tags=[], exclude_tags_start_with=[]):
+    # TODO: Do not search all sentences but only X neighboring ones!!!!!!! -> Segments
     m = np.zeros((len(lemma_by_sentence), len(lemma_by_sentence)))
     for index_a, (l_a, t_a) in enumerate(zip(lemma_by_sentence, tags_by_sentence)):
+        if (index_a % int(len(lemma_by_sentence) * 0.1)) == 0 and index_a != 0:
+            print(datetime.datetime.now(), "10% done total sentences:", len(lemma_by_sentence))
+
         for index_b, (l_b, t_b) in enumerate(zip(lemma_by_sentence[index_a + 1:], tags_by_sentence[index_a + 1:])):
             m[index_a, index_a + 1 + index_b] = tag_overlap(sent_a_lemma=l_a, sent_a_tags=t_a, sent_b_lemma=l_b, sent_b_tags=t_b, accept_tags=accept_tags,
                         accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
