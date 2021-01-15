@@ -1,27 +1,9 @@
 import pandas as pd
 import os
 import numpy as np
+from Helper_functions import *
 
-def word_length(document_word):
-  '''
-
-  :param document: List of tokenized entries
-  :return: length for each entry in the list
-  '''
-  return [len(i) for i in document_word]
-
-
-def word_familarity(document_word, familarity_dict):
-  # retrieve frequency from a DB of Tests
-  count = 0
-  for i in document_word:
-    temp = familarity_dict.get(i, None)
-    if temp is not None:
-      count += temp
-  count /= len(document_word)
-  return count
-
-
+# TODO: Sort in a fashion that one finds things!!
 def syllable_count(document_word):
   '''
 
@@ -43,8 +25,30 @@ def syllable_count(document_word):
   return syllable_list
 
 
-# TODO: pronoun resolution
-def pronoun_resolution(document_tags, noun_tags=[], noun_tags_start_with=["N"], exclude_noun_tags=[], 
+def word_length(document_word):
+  '''
+
+  :param document: List of tokenized entries
+  :return: length for each entry in the list
+  '''
+  return [len(i) for i in document_word]
+
+
+def word_familarity(document_word, familarity_dict):
+  # retrieve frequency from a DB of Tests
+  count = 0
+  for i in document_word:
+    temp = familarity_dict.get(i, None)
+    if temp is not None:
+      count += temp
+  count /= len(document_word)
+  return count
+
+
+
+
+
+def pronoun_resolution(document_tags, noun_tags=[], noun_tags_start_with=["N"], exclude_noun_tags=[],
                        exclude_noun_tags_start_with =[], 
                        pronoun_tags=["ADJA", "ADJD", "ADV"], pronoun_tags_start_with=["P"], exclude_pronoun_tags=["PTK"],
                        exclude_pronoun_tags_start_with =[]):
@@ -209,7 +213,7 @@ def count_puncutation(document_tags, accept_tags=[], accept_tags_start_with=["$"
   return len(tag_list)/len(document_tags)
 
 
-def tag_overlap(sent_a_tags, sent_a_lemma, sent_b_tags, sent_b_lemma, accept_tags=["NE", "NN"], accept_tags_start_with=["N"],
+def tag_overlap(sent_a_tags, sent_a_lemma, sent_b_tags, sent_b_lemma, accept_tags=[], accept_tags_start_with=["N"],
                 exclude_tags=[], exclude_tags_start_with=[]):
   '''
   :param sent_a_tags: tag list of sentance/ pargraph/.. a
@@ -248,32 +252,7 @@ def lexical_diversity(document_tags, accept_tags=[], accept_tags_start_with=[], 
   lexical_terms = [k for k, v in count_dict.items() if v > 0]
   return len(lexical_terms)
 
-################# Helper functions
-def check_tags(tag, accept_tags=[], accept_tags_start_with=[], exclude_tags=[], exclude_tags_start_with=[]):
-  if tag in accept_tags or (tag[0] in accept_tags_start_with and subtag_matching(tag=tag, subtags=exclude_tags)):
-        return True
-  if tag not in exclude_tags or (tag[0] not in exclude_tags_start_with or (subtag_matching(tag=tag, subtags=accept_tags))):
-      return True
-  return False
 
-
-def subtag_matching(tag, subtags):
-  for st in subtags:
-    if st in tag:
-      return True
-  return False
-
-def search_tag_set(aggregate, tags, accept_tags=[], accept_tags_start_with=[], exclude_tags=[], exclude_tags_start_with=[]):
-  aggregate_list = [a for a, t in zip(aggregate, tags) 
-                    if check_tags(tag=t, accept_tags=accept_tags, accept_tags_start_with=accept_tags_start_with,
-                                  exclude_tags=exclude_tags, exclude_tags_start_with=exclude_tags_start_with)]
-  return aggregate_list
-
-def to_count_dict(aggregate_list):
-  count_dict = {}
-  for i in aggregate_list:
-    count_dict[i] = count_dict.get(i, 0) + 1
-  return count_dict
 
 
 
@@ -315,10 +294,7 @@ def co_reference_matrix(document_tag, document_lemma,  accept_tags=[], accept_ta
   # print(co_reference_exists)
   return (local_corefererence_cohesion, global_corefererence_cohesion, co_reference_dist_sum)
 
-def mean_of_list(l):
-    return sum(l)/len(l)
 
-def variance_of_list(l):
-    m = mean_of_list(l)
-    l_2 = [i**2 for i in l]
-    return (sum(l_2) - len(l) * m**2) / (len(l)-1)
+
+
+

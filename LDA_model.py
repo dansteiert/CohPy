@@ -9,6 +9,7 @@ That the more words from a given topic a drawn, the larger the cohesion is?
 '''
 
 from gensim.models import LdaModel
+from gensim.models.wrappers import LdaMallet
 
 
 def LDA(df_matrix, dictionary):

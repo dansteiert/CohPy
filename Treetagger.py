@@ -1,5 +1,3 @@
-
-
 def POS_tagger(tagger, document):
   pos_tags = tagger.tag_text(document)
   words = [i.split("\t")[0] for i in pos_tags]
