@@ -4,34 +4,6 @@ import numpy as np
 from Helper_functions import *
 
 # TODO: Sort in a fashion that one finds things!!
-def syllable_count(document_word):
-  '''
-
-  :param document: List of tokenized entries
-  :return: Syllable count for each entry in the list
-  '''
-  syllable_list = []
-  for i in document_word:
-    count = 0
-    flipper = False
-    for j in i.lower():
-      if flipper:
-        flipper= False
-        continue
-      if j in "aeiou":
-        count += 1
-        flipper = True
-    syllable_list.append(count)
-  return syllable_list
-
-
-def word_length(document_word):
-  '''
-
-  :param document: List of tokenized entries
-  :return: length for each entry in the list
-  '''
-  return [len(i) for i in document_word]
 
 
 def word_familarity(document_word, familarity_dict):
@@ -45,30 +17,6 @@ def word_familarity(document_word, familarity_dict):
   return count
 
 
-
-
-
-def pronoun_resolution(document_tags, noun_tags=[], noun_tags_start_with=["N"], exclude_noun_tags=[],
-                       exclude_noun_tags_start_with =[], 
-                       pronoun_tags=["ADJA", "ADJD", "ADV"], pronoun_tags_start_with=["P"], exclude_pronoun_tags=["PTK"],
-                       exclude_pronoun_tags_start_with =[]):
-                       
-  # This Task, wants to map pronouns with their respectiv "owners"
-  # more complex task!
-  # Pronoun density  consists  of  the  proportion  of  noun  phrases(NPs, as defined  by  a  syntactic
-  # parser, which  will  be  described  later) that  are  captured by  pronouns(as defined  by  the  Brill  POS  tagger).
-
-  tag_list_nouns = search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=noun_tags,
-                                  accept_tags_start_with=noun_tags_start_with, exclude_tags=exclude_noun_tags,
-                                  exclude_tags_start_with=exclude_noun_tags_start_with)
-  tag_list_pronouns = search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=pronoun_tags,
-                                  accept_tags_start_with=pronoun_tags_start_with, exclude_tags=exclude_pronoun_tags,
-                                  exclude_tags_start_with=exclude_pronoun_tags_start_with)
-  if len(tag_list_pronouns) > 0:
-    return len(tag_list_nouns)/len(tag_list_pronouns)
-  return len(tag_list_nouns)
-
-
 # TODO: causal cohesion
 def casual_cohesion(document):
   # The total list of causal particles comes either from this short list of verbs or from the causal conjunctions,
@@ -76,32 +24,6 @@ def casual_cohesion(document):
   # is simply a ratio of causal particles (P) to causal verbs (V).
 
   return None
-
-
-def count_logicals(document_tags, accept_tags=["KON", "KOKOM"], accept_tags_start_with=[],
-                          exclude_tags=[], exclude_tags_start_with=[]):
-  # high count means more "work"
-  # KOUI:subordinating  conjunction  followed|  by \zu" and innitive um [zu leben], anstatt [zu fragen]
-  # KOUS:  subordinating  conjunction  followed  by  clause  weil, dass, damit, wenn, ob
-  # KON:  coordinating  conjunction  und, oder, aber
-  # KOKOM:  comparative  conjunction  als, wie
-  logical_count = sum(search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=accept_tags,
-                                    accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
-                                    exclude_tags_start_with=exclude_tags_start_with))  
-  return logical_count
-
-
-def mean_sentence_length(document_tags, accept_tags=["$."], accept_tags_start_with=[],
-                         exclude_tags=[], exclude_tags_start_with=[]):
-    sent_length = []
-    temp_sent_length = 0
-    for t in document_tags:
-        if check_tags(tag=t, accept_tags=accept_tags, accept_tags_start_with=accept_tags_start_with,
-                      exclude_tags=exclude_tags, exclude_tags_start_with=exclude_tags_start_with):
-            sent_length.append(temp_sent_length)
-        else:
-            temp_sent_length += 1
-    return mean_of_list(sent_length)
 
 
 
@@ -131,128 +53,11 @@ def Flescher_Kincaid_Grade_Level(document_words, document_tags, document_syllabl
 
 
 
-
-
-def POS_frequency(document_tags, accept_tags=[], accept_tags_start_with=[], exclude_tags=[],
-                      exclude_tags_start_with=["$"]):
-  # where is it used/implemented? - what type should be returned?
-  # How fine should the differentiation be done?
-  tag_list= search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=accept_tags,
-                                    accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
-                                    exclude_tags_start_with=exclude_tags_start_with)
-  count_dict = to_count_dict(tag_list)
-  tag_dict = {key: val/1000 for (key, val) in count_dict.items()}
-  return tag_dict
-
-
-def connective_words(document_words,
-                     connective_words=["daher", "darum", "deshalb", "dementsprechend"]):
-  # TODO: Need a larger set of connective words! and maybe devide by those categories
-  #  LEMMA? -> use tags?
-  #  Connectives:
-  #  (1) clarifying connectives, such as in other words and that is;
-  #  (2) additive connectives, such as also and moreover;
-  #  (3) temporal connectives, such as after, before, and when; and
-  #  (4) causal connectives, such as because, so, and consequently.
-  #  On another dimension, there is a contrast between positive
-  #  and negative connectives. For example, adversative additive
-  #  connectives (e.g., however, in contrast) and adversative
-  #  causal connectives (e.g., although) are negative.
-
-  counter = 0
-  for i in document_words:
-    if i in connective_words:
-      counter += 1
-  return counter
-
-
-
-
 # TODO:
 ### Things to include:
 
 #   COmbine content words (Nouns, lexical verbs, adjectives and adverbs) and functional words (the rest?), and calculate this indice again
 # NP, VP: Verb oder Substantive des Satzes  ist Kopf des Satzes (wichtigester bestandteil) Willkür?!
-def content_functional_ratio(document_tags, content_tags=[], content_tags_start_with=["N"], exclude_content_tags=[],
-                             exclude_content_tags_start_with =[], functional_tags=["READUP!"],
-                             functional_tags_start_with=[], exclude_functional_tags=[],
-                             exclude_functional_tags_start_with =[]):  
-  tag_list_content= search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=content_tags,
-                                    accept_tags_start_with=content_tags_start_with, exclude_tags=exclude_content_tags,
-                                    exclude_tags_start_with=exclude_content_tags_start_with)
-  tag_list_functional= search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=functional_tags,
-                                    accept_tags_start_with=functional_tags_start_with, exclude_tags=exclude_functional_tags,
-                                    exclude_tags_start_with=exclude_functional_tags_start_with)
-
-  if len(tag_list_functional) > 0:
-    return len(tag_list_content)/len(tag_list_functional)
-  return len(tag_list_content)
-
-
-def type_token_ratio(document_tags, accept_tags=[], accept_tags_start_with=["N"], exclude_tags=[],
-                             exclude_tags_start_with =[]):
-  # count unique words against their repetitions.
-  # split into Nouns and non-Noun content words
-  tag_list_nouns= search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=accept_tags,
-                                    accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
-                                    exclude_tags_start_with=exclude_tags_start_with)
-  count_dict = to_count_dict(aggregate_list=tag_list_nouns)
-  if len(count_dict) == 0:
-    ratio = 0
-  else:
-    ratio = len(count_dict)/sum(count_dict.values())
-
-  return ratio
-
-
-def count_puncutation(document_tags, accept_tags=[], accept_tags_start_with=["$"], exclude_tags=[],
-                      exclude_tags_start_with=[]):
-  tag_list= search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=accept_tags,
-                                    accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
-                                    exclude_tags_start_with=exclude_tags_start_with)
-  return len(tag_list)/len(document_tags)
-
-
-def tag_overlap(sent_a_tags, sent_a_lemma, sent_b_tags, sent_b_lemma, accept_tags=[], accept_tags_start_with=["N"],
-                exclude_tags=[], exclude_tags_start_with=[]):
-  '''
-  :param sent_a_tags: tag list of sentance/ pargraph/.. a
-  :param sent_a_lemma: lemma list of sentance/ pargraph/.. a
-  :param sent_b_tags: tag list of sentance/ pargraph/.. b
-  :param sent_b_lemma: lemma list of sentance/ pargraph/.. b
-  :return: number of overlapping lemma
-  '''
-  lemma_set_sent_a = set(search_tag_set(aggregate=sent_a_lemma, tags=sent_a_tags, accept_tags=accept_tags,
-                                        accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
-                                        exclude_tags_start_with=exclude_tags_start_with))
-  lemma_set_sent_b = set(search_tag_set(aggregate=sent_b_lemma, tags=sent_b_tags, accept_tags=accept_tags,
-                                        accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
-                                        exclude_tags_start_with=exclude_tags_start_with))
-
-  overlapping_lemma = lemma_set_sent_a.intersect(lemma_set_sent_b)
-  return len(overlapping_lemma)
-
-
-def word_repetition(document_lemma, document_tags, accept_tags=[], accept_tags_start_with=[], exclude_tags=["ART"], exclude_tags_start_with = ["$"]):
-  # is it important how often a word occured multiple times
-  lemma_list = search_tag_set(aggregate=document_lemma, tags=document_tags, accept_tags=accept_tags,
-                            accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
-                            exclude_tags_start_with=exclude_tags_start_with)
-  count_dict = to_count_dict(aggregate_list=lemma_list)
-
-  repeated_words = [k for k, v in count_dict.items() if v > 1]
-  return len(repeated_words)
-
-
-def lexical_diversity(document_tags, accept_tags=[], accept_tags_start_with=[], exclude_tags=[], exclude_tags_start_with=["$"]):
-  tag_list = search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=accept_tags, 
-                            accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags, 
-                            exclude_tags_start_with=exclude_tags_start_with)
-  count_dict = to_count_dict(aggregate_list=tag_list)
-  lexical_terms = [k for k, v in count_dict.items() if v > 0]
-  return len(lexical_terms)
-
-
 
 
 

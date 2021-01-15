@@ -12,6 +12,9 @@ from w2v_model import *
 from LDA_model import *
 from LSA_model import *
 from Helper_functions import *
+from Ratio_Scores import *
+from Count_Scores import *
+from Overlap_Scores import *
 
 
 ## enter the text:
@@ -20,11 +23,10 @@ text = gutenberg.raw("carroll-alice.txt")
 
 
 ### choose the language of the text
-select_language = "de"
+select_language = "en"
 
 ## TreeTagger files need to be downloaded here: https://cis.uni-muenchen.de/~schmid/tools/TreeTagger/
 # Tagsets can also be found on this page. Add them to the lib folder of TreeTagger
-t_tagger = tt.TreeTagger(TAGLANG=select_language, TAGDIR="C:\\TreeTagger")
 
 if select_language == "de":
     # <editor-fold desc="German Tagset">
@@ -48,11 +50,11 @@ if select_language == "de":
     adverbs_accept_tags_start_with = []
     adverbs_exclude_tags = []
     adverbs_exclude_tags_start_with = []
-    ## Adjectives:
-    adjective_accept_tags = ["ADJA", "ADJD"]
-    adjective_accept_tags_start_with = []
-    adjective_exclude_tags = []
-    adjective_exclude_tags_start_with = []
+    ## adjectives:
+    adjectives_accept_tags = ["ADJA", "ADJD"]
+    adjectives_accept_tags_start_with = []
+    adjectives_exclude_tags = []
+    adjectives_exclude_tags_start_with = []
     ## Punctuation:
     punctuation_accept_tags = []
     punctuation_accept_tags_start_with = ["$"]
@@ -98,11 +100,11 @@ elif select_language == "en":
     adverbs_accept_tags_start_with = ["A"]
     adverbs_exclude_tags = ["AJ", "AT"]
     adverbs_exclude_tags_start_with = []
-    ## Adjectives:
-    adjective_accept_tags = []
-    adjective_accept_tags_start_with = ["A"]
-    adjective_exclude_tags = ["AV", "AT"]
-    adjective_exclude_tags_start_with = []
+    ## adjectives:
+    adjectives_accept_tags = []
+    adjectives_accept_tags_start_with = ["A"]
+    adjectives_exclude_tags = ["AV", "AT"]
+    adjectives_exclude_tags_start_with = []
     ## Punctuation:
     punctuation_accept_tags = []
     punctuation_accept_tags_start_with = ["P", "S"]
@@ -124,69 +126,146 @@ elif select_language == "en":
     logical_exclude_tags = []
     logical_exclude_tags_start_with = []
     # </editor-fold>
-
-(words, tags, lemmas) = POS_tagger(tagger=t_tagger, document=text)
-w_by_sent = []
-l_by_sent = []
-temp_l = []
-
-# how to get paragraphs??
-for t, l in zip(tags, lemmas):
-    if check_tags(tag=t, accept_tags=punctuation_fin_accept_tags, accept_tags_start_with=punctuation_fin_accept_tags_start_with,
-                  exclude_tags=punctuation_fin_exclude_tags, exclude_tags_start_with=punctuation_fin_exclude_tags_start_with):
-        l_by_sent.append(temp_l)
-        temp_l = []
-    else:
-        temp_l.append(l)
+else:
+    print("no fitting language found")
+    exit(-1)
+    # return -1
+t_tagger = tt.TreeTagger(TAGLANG=select_language, TAGDIR="C:\\TreeTagger")
 
 
-word_len = word_length(document_word=words).mean()
-syll_count = syllable_count(document_word=words).mean()
-print(pd.DataFrame(
-    data={"Words": words, "Tags": tags, "Lemma": lemmas, "Word Length": word_len, "Syllabel count": syll_count}))
+# <editor-fold desc="Preprocessing">
+(words, tags, lemma) = POS_tagger(tagger=t_tagger, document=text)
 
-print("Mean Word Length", 1 / len(word_len) * sum(word_len))
-print("Mean Syll COunt", 1 / len(word_len) * sum(syll_count))
-print("# Logicals: ", count_logicals(document_tags=tags, accept_tags=logical_accept_tags,
-                                     accept_tags_start_with=logical_accept_tags_start_with, exclude_tags=logical_exclude_tags,
-                                     exclude_tags_start_with=logical_exclude_tags_start_with))
-print("type token ratio: ", type_token_ratio(document_token=tags))
-
-co_reference_matrix(document_tag=tags, document_lemma=lemmas)
-print(Flescher_Reading_Ease(document_words=words, document_tags=tags, document_syllables=syll_count))
-print(Flescher_Kincaid_Grade_Level(document_words=words, document_tags=tags, document_syllables=syll_count))
+lemma_by_sentence = split_into_sentences(aggregator_list=lemma, document_tags=tags, accept_tags=punctuation_fin_accept_tags,
+                                         accept_tags_start_with=punctuation_fin_accept_tags_start_with,
+                                         exclude_tags=punctuation_fin_exclude_tags,
+                                         exclude_tags_start_with=punctuation_fin_exclude_tags_start_with)
+tags_by_sentence = split_into_sentences(aggregator_list=tags, document_tags=tags, accept_tags=punctuation_fin_accept_tags,
+                                        accept_tags_start_with=punctuation_fin_accept_tags_start_with,
+                                        exclude_tags=punctuation_fin_exclude_tags,
+                                        exclude_tags_start_with=punctuation_fin_exclude_tags_start_with)
+# </editor-fold>
 
 
-#
-#
-#
-#
+# <editor-fold desc="Count Scores">
+mean_word_length = word_length(document_word=words)
+mean_syllables = syllable_count(document_word=words)
+count_logicals = count_tags(document_tags=tags, accept_tags=logical_accept_tags,
+                               accept_tags_start_with=logical_accept_tags_start_with, exclude_tags=logical_exclude_tags,
+                               exclude_tags_start_with=logical_exclude_tags_start_with)
+count_conjugations = count_tags(document_tags=tags, accept_tags=conjugations_accept_tags,
+                               accept_tags_start_with=conjugations_accept_tags_start_with, exclude_tags=conjugations_exclude_tags,
+                               exclude_tags_start_with=conjugations_exclude_tags_start_with)
+mean_sent_length = mean_of_list([len(i) for i in lemma_by_sentence])
+mean_punctuations = mean_of_list([count_tags(document_tags=i, accept_tags=punctuation_fin_accept_tags,
+                                         accept_tags_start_with=punctuation_fin_accept_tags_start_with,
+                                         exclude_tags=punctuation_fin_exclude_tags,
+                                         exclude_tags_start_with=punctuation_fin_exclude_tags_start_with) for i in tags_by_sentence])
+mean_lexical_diversity = mean_of_list([lexical_diversity(document_tags=i, accept_tags=[], accept_tags_start_with=[],
+                                                        exclude_tags=punctuation_accept_tags,
+                                                         exclude_tags_start_with=punctuation_accept_tags_start_with)
+                                       for i in tags_by_sentence])
+
+
+# TODO: add POS-Frequency and Connective Words
+# </editor-fold>
+
+
+# <editor-fold desc="Ratio Scores">
+type_token_ratio_nouns = type_token_ratio(document_tags=tags, accept_tags=nouns_accept_tags,
+                                          accept_tags_start_with=nouns_accept_tags_start_with, exclude_tags=nouns_exclude_tags,
+                                          exclude_tags_start_with =nouns_exclude_tags_start_with)
+type_token_ratio_adverbs = type_token_ratio(document_tags=tags, accept_tags=adverbs_accept_tags,
+                                          accept_tags_start_with=adverbs_accept_tags_start_with, exclude_tags=adverbs_exclude_tags,
+                                          exclude_tags_start_with =adverbs_exclude_tags_start_with)
+type_token_ratio_adjectivess = type_token_ratio(document_tags=tags, accept_tags=adjectives_accept_tags,
+                                          accept_tags_start_with=adjectives_accept_tags_start_with, exclude_tags=adjectives_exclude_tags,
+                                          exclude_tags_start_with =adjectives_exclude_tags_start_with)
+type_token_ratio_verbs = type_token_ratio(document_tags=tags, accept_tags=verbs_accept_tags,
+                                          accept_tags_start_with=verbs_accept_tags_start_with, exclude_tags=verbs_exclude_tags,
+                                          exclude_tags_start_with =verbs_exclude_tags_start_with)
+
+pronoun_noun_ratio = pronoun_resolution(document_tags=tags, nouns_accept_tags=nouns_accept_tags,
+                                        nouns_accept_tags_start_with=nouns_accept_tags_start_with,
+                                        nouns_exclude_tags=nouns_exclude_tags, nouns_exclude_tags_start_with=nouns_exclude_tags_start_with,
+                                        pronouns_accept_tags=pronouns_accept_tags, pronouns_accept_start_with=pronouns_accept_tags_start_with,
+                                        pronouns_exclude_tags=pronouns_exclude_tags, pronouns_exclude_tags_start_with=pronouns_exclude_tags_start_with)
+
+# TODO: add content_functional_ratio
+# </editor-fold>
+
+
+# <editor-fold desc="Overlaps">
+nouns_overlap = overlap_matrix(lemma_by_sentence=lemma_by_sentence, tags_by_sentence=tags_by_sentence, accept_tags=nouns_accept_tags,
+                               accept_tags_start_with=nouns_accept_tags_start_with, exclude_tags=nouns_exclude_tags,
+                               exclude_tags_start_with =nouns_exclude_tags_start_with)
+## Not Sure about Pronouns
+pronouns_overlap = overlap_matrix(lemma_by_sentence=lemma_by_sentence, tags_by_sentence=tags_by_sentence, accept_tags=pronouns_accept_tags,
+                               accept_tags_start_with=pronouns_accept_tags_start_with, exclude_tags=pronouns_exclude_tags,
+                               exclude_tags_start_with =pronouns_exclude_tags_start_with)
+adverbs_overlap = overlap_matrix(lemma_by_sentence=lemma_by_sentence, tags_by_sentence=tags_by_sentence, accept_tags=adverbs_accept_tags,
+                                 accept_tags_start_with=adverbs_accept_tags_start_with, exclude_tags=adverbs_exclude_tags,
+                                 exclude_tags_start_with =adverbs_exclude_tags_start_with)
+adjectives_overlap = overlap_matrix(lemma_by_sentence=lemma_by_sentence, tags_by_sentence=tags_by_sentence, accept_tags=adjectives_accept_tags,
+                                    accept_tags_start_with=adjectives_accept_tags_start_with, exclude_tags=adjectives_exclude_tags,
+                                    exclude_tags_start_with =adjectives_exclude_tags_start_with)
+verbs_overlap = overlap_matrix(lemma_by_sentence=lemma_by_sentence, tags_by_sentence=tags_by_sentence, accept_tags=verbs_accept_tags,
+                               accept_tags_start_with=verbs_accept_tags_start_with, exclude_tags=verbs_exclude_tags,
+                               exclude_tags_start_with =verbs_exclude_tags_start_with)
+word_repetitions = np.zeros((len(lemma_by_sentence), len(lemma_by_sentence)))
+for index_r, (noun, pronoun, adverb, adjective, verb) in enumerate(zip(nouns_overlap, pronouns_overlap, adverbs_overlap, adjectives_overlap, verbs_overlap)):
+    for index_c, (n, p, adv, adj, v) in enumerate(zip(noun, pronoun, adverb, adjective, verb)):
+        word_repetitions[index_r, index_c] = n + p + adv + adj + v
+repeated_words = np.sum(word_repetitions)
+
+# </editor-fold>
+
+
+# <editor-fold desc="Concretness Score">
+df_conc = load_score_file("data\\350k_ims_sorted copy.dat")
+hitrate_conc = 0
+conc = []
+for i in lemma:
+    temp = Concretness(lemma=i, df=df_conc)
+    if temp is not None:
+        conc.append(temp)
+        hitrate_conc += 1
+hitrate_conc /= len(lemma)
+mean_concretness = mean_of_list(conc)
+# </editor-fold>
+
+
+# <editor-fold desc="Sentiment Overlap">
+# w2v_model = load_w2v("data\\250kGLEC_sg500.vec")
+# sentiment_overlap = overlap_matrix_sentiment(w2v_model=w2v_model, lemma_by_sentence=lemma_by_sentence,
+#                                              tags_by_sentence=tags_by_sentence,   accept_tags=nouns_accept_tags,
+#                                              accept_tags_start_with=nouns_accept_tags_start_with, exclude_tags=nouns_exclude_tags,
+#                                              exclude_tags_start_with =nouns_exclude_tags_start_with)
+# TODO: w2v model does not load properly! (only the smaller one)
+# </editor-fold>
+
+
+# <editor-fold desc="Other Scores">
+co_ref = co_reference_matrix(document_tag=tags, document_lemma=lemma)
+FRE = Flescher_Reading_Ease(document_words=words, document_tags=tags, document_syllables=mean_syllables)
+FKGL = Flescher_Kincaid_Grade_Level(document_words=words, document_tags=tags, document_syllables=mean_syllables)
+# </editor-fold>
+
+
+# <editor-fold desc="Topic Modeling">
+# TODO: redo with LDA Mallet!
 # ######## Model building
 # # TODO: structure for document vs corpus
 # dictionary, doc_freq_matrix, tfidf = preprocessing(corpus_tokens=lemmas)
 # lsa_model = LSA(df_matrix=doc_freq_matrix, dictionary=dictionary)
 # lda_model = LDA(df_matrix=doc_freq_matrix, dictionary=dictionary)
+# </editor-fold>
 
 
-# w2v_model = load_w2v("data\\250kGLEC_sg500.vec")
-for index, (l) in enumerate(l_by_sent):
-    for l_2 in l_by_sent[index + 1:]:
-        # print(l, w)
-        # print(l_2, w_2)
-        print("-----------------------")
-        print(sentence_similarity(w2v=w2v_model, sent_a=l, sent_b=l_2))
-        # print(sentence_similarity(w2v=w2v_model, sent_a=w, sent_b=w_2))
 
 
-## concretness:
-df_conc = load_score_file("data\\350k_ims_sorted copy.dat")
-conc = []
-for i in lemmas:
-    temp = Concretness(lemma=i, df=df_conc)
-    if temp is not None:
-        conc.append(temp)
-print(sum(conc), mean_of_list(conc))
-print(variance_of_list(conc))
+
+
 
 
 # TODO:
@@ -218,3 +297,6 @@ print(variance_of_list(conc))
 ## get books from Gutenberg Project:
 # http://self.gutenberg.org/CollectionCatalog.aspx
 # ADd own Corpora - Where to find them in "plain text"? - DOes one has to create them by themselfes?
+
+
+

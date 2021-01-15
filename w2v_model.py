@@ -11,6 +11,7 @@ Distance evalution by "cosine similarity score"
 from gensim.models import Word2Vec, KeyedVectors
 import gensim
 import multiprocessing
+from Helper_functions import *
 
 
 def train_word2vec(training_data):
@@ -26,31 +27,41 @@ def load_w2v(path_to_model):
     w2v = KeyedVectors.load_word2vec_format(path_to_model)
     return w2v
 
-def sentence_similarity(w2v, sent_a, sent_b):
+def sentence_similarity(w2v, sent_a_lemma, sent_a_tags, sent_b_lemma, sent_b_tags,
+                        accept_tags=[], accept_tags_start_with=[],
+                        exclude_tags=[], exclude_tags_start_with=[]):
     ## Greedy always take the closest related value?
-    temp_sent_b = sent_b.copy()
-
-    sent_sim = 0
-    for i in sent_a:
-        temp_max = 0
-        elem = -1
-        for index, j in enumerate(temp_sent_b):
-            try:
-                sim = w2v.similarity(i, j)
-                if sim > temp_max:
-                    temp_max = sim
-                    elem = index
-            except:
+    hit = 0
+    searched = 0
+    sent_sim = []
+    for l_a, t_a in zip(sent_a_lemma, sent_a_tags):
+        if check_tags(tag=t_a, accept_tags=accept_tags, accept_tags_start_with=accept_tags_start_with,
+                      exclude_tags=exclude_tags, exclude_tags_start_with=exclude_tags_start_with):
+            if l_a not in w2v.vocab:
+                searched += 1
                 continue
-        temp_sent_b.pop(elem)
-        if len(temp_sent_b) == 0:
-            break
-        sent_sim += temp_max
-    try:
-        sent_sim /= len(sent_a)
-    except:
-        pass
-    return sent_sim
+            temp_max = 0
+            elem = -1
+            for index, (l_b, t_b) in enumerate(zip(sent_b_lemma, sent_b_tags)):
+                if check_tags(tag=t_b, accept_tags=accept_tags, accept_tags_start_with=accept_tags_start_with,
+                              exclude_tags=exclude_tags, exclude_tags_start_with=exclude_tags_start_with):
+                    try:
+                        sim = w2v.similarity(l_a, l_b)
+                        if sim > temp_max:
+                            temp_max = sim
+                            elem = index
+                            searched += 1
+                            hit += 1
+                    except:
+                        searched += 1
+                        continue
+            if temp_max > 0:
+                sent_b_lemma.pop(elem)
+                sent_sim.append(temp_max)
+            if len(sent_b_lemma) == 0:
+                break
+
+    return mean_of_list(sent_sim), hit, searched
 
 
 
