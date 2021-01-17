@@ -12,7 +12,8 @@ def pronoun_resolution(document_tags, nouns_accept_tags=[], nouns_accept_tags_st
     # parser, which  will  be  described  later) that  are  captured by  pronouns(as defined  by  the  Brill  POS  tagger).
 
     tag_list_nouns = search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=nouns_accept_tags,
-                                    accept_tags_start_with=nouns_accept_tags_start_with, exclude_tags=nouns_exclude_tags,
+                                    accept_tags_start_with=nouns_accept_tags_start_with,
+                                    exclude_tags=nouns_exclude_tags,
                                     exclude_tags_start_with=nouns_exclude_tags_start_with)
     tag_list_pronouns = search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=pronouns_accept_tags,
                                        accept_tags_start_with=pronouns_accept_tags_start_with,
@@ -24,32 +25,33 @@ def pronoun_resolution(document_tags, nouns_accept_tags=[], nouns_accept_tags_st
 
 
 def content_functional_ratio(document_tags, content_tags=[], content_tags_start_with=["N"], exclude_content_tags=[],
-                             exclude_content_tags_start_with =[], functional_tags=["READUP!"],
+                             exclude_content_tags_start_with=[], functional_tags=["READUP!"],
                              functional_tags_start_with=[], exclude_functional_tags=[],
-                             exclude_functional_tags_start_with =[]):
-  tag_list_content= search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=content_tags,
-                                    accept_tags_start_with=content_tags_start_with, exclude_tags=exclude_content_tags,
-                                    exclude_tags_start_with=exclude_content_tags_start_with)
-  tag_list_functional= search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=functional_tags,
-                                    accept_tags_start_with=functional_tags_start_with, exclude_tags=exclude_functional_tags,
-                                    exclude_tags_start_with=exclude_functional_tags_start_with)
+                             exclude_functional_tags_start_with=[]):
+    tag_list_content = search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=content_tags,
+                                      accept_tags_start_with=content_tags_start_with, exclude_tags=exclude_content_tags,
+                                      exclude_tags_start_with=exclude_content_tags_start_with)
+    tag_list_functional = search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=functional_tags,
+                                         accept_tags_start_with=functional_tags_start_with,
+                                         exclude_tags=exclude_functional_tags,
+                                         exclude_tags_start_with=exclude_functional_tags_start_with)
 
-  if len(tag_list_functional) > 0:
-    return len(tag_list_content)/len(tag_list_functional)
-  return len(tag_list_content)
+    if len(tag_list_functional) > 0:
+        return len(tag_list_content) / len(tag_list_functional)
+    return len(tag_list_content)
 
 
 def type_token_ratio(document_tags, accept_tags=[], accept_tags_start_with=["N"], exclude_tags=[],
-                             exclude_tags_start_with =[]):
-  # count unique words against their repetitions.
-  # split into Nouns and non-Noun content words
-  tag_list_nouns= search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=accept_tags,
+                     exclude_tags_start_with=[]):
+    # count unique words against their repetitions.
+    # split into Nouns and non-Noun content words
+    tag_list_nouns = search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=accept_tags,
                                     accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
                                     exclude_tags_start_with=exclude_tags_start_with)
-  count_dict = to_count_dict(aggregate_list=tag_list_nouns)
-  if len(count_dict) == 0:
-    ratio = 0
-  else:
-    ratio = len(count_dict)/sum(count_dict.values())
+    count_dict = to_count_dict(aggregate_list=tag_list_nouns)
+    if len(count_dict) == 0:
+        ratio = 0
+    else:
+        ratio = len(count_dict) / sum(count_dict.values())
 
-  return ratio
+    return ratio

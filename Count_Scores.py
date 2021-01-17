@@ -2,7 +2,7 @@ from Helper_functions import *
 
 
 def count_tags(document_tags, accept_tags=[], accept_tags_start_with=["$"], exclude_tags=[],
-                      exclude_tags_start_with=[]):
+               exclude_tags_start_with=[]):
   tag_list= search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=accept_tags,
                            accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
                            exclude_tags_start_with=exclude_tags_start_with)
@@ -28,7 +28,7 @@ def syllable_count(document_word):
         count += 1
         flipper = True
     syllable_list.append(count)
-  return mean_of_list(syllable_list)
+  return syllable_list
 
 
 def word_length(document_word):
@@ -46,8 +46,8 @@ def POS_frequency(document_tags, accept_tags=[], accept_tags_start_with=[], excl
   # where is it used/implemented? - what type should be returned?
   # How fine should the differentiation be done?
   tag_list= search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=accept_tags,
-                                    accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
-                                    exclude_tags_start_with=exclude_tags_start_with)
+                           accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
+                           exclude_tags_start_with=exclude_tags_start_with)
   count_dict = to_count_dict(tag_list)
   tag_dict = {key: val/1000 for (key, val) in count_dict.items()}
   return tag_dict
