@@ -132,9 +132,12 @@ def split_into_sentences(aggregator_list, document_tags, accept_tags=["$."], acc
     return lemma_list
 
 
-def merge_tagsets(tagset_a, tagset_b):
-    tagset_a.extend(tagset_b)
-    return tagset_a
+def merge_tagsets(tagset_list):
+    new_tagset = []
+    for i in tagset_list:
+        new_tagset.extend(i)
+    new_tagset = list(set(new_tagset))
+    return new_tagset
 
 
 def split_at_newline(text, sep="\n"):
@@ -149,3 +152,9 @@ def split_at_newline(text, sep="\n"):
         text = text[index + len(sep) - 1:]
 
     return segmented
+
+def list_to_dict(df, column):
+    list_dict = {}
+    for w, c in zip(df["Word"].tolist(), df[column].tolist()):
+        list_dict[w] = c
+    return list_dict

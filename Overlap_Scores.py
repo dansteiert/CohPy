@@ -19,24 +19,13 @@ def tag_overlap(sent_a_tags, sent_a_lemma, sent_b_tags, sent_b_lemma, accept_tag
     lemma_set_sent_b = set(search_tag_set(aggregate=sent_b_lemma, tags=sent_b_tags, accept_tags=accept_tags,
                                           accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
                                           exclude_tags_start_with=exclude_tags_start_with))
-    print("----------")
-    print(lemma_set_sent_a)
-    print(lemma_set_sent_b)
+    # print("----------")
+    # print(lemma_set_sent_a)
+    # print(lemma_set_sent_b)
     overlapping_lemma = lemma_set_sent_a.intersection(lemma_set_sent_b)
-    print(overlapping_lemma)
+    # print(overlapping_lemma)
     return len(overlapping_lemma)
 
-
-def word_repetition(document_lemma, document_tags, accept_tags=[], accept_tags_start_with=[], exclude_tags=["ART"],
-                    exclude_tags_start_with=["$"]):
-    # is it important how often a word occured multiple times
-    lemma_list = search_tag_set(aggregate=document_lemma, tags=document_tags, accept_tags=accept_tags,
-                                accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
-                                exclude_tags_start_with=exclude_tags_start_with)
-    count_dict = to_count_dict(aggregate_list=lemma_list)
-
-    repeated_words = [k for k, v in count_dict.items() if v > 1]
-    return len(repeated_words)
 
 
 def overlap_matrix(lemma_by_segment, tags_by_segment, accept_tags=[], accept_tags_start_with=[],

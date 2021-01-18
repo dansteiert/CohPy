@@ -4,7 +4,6 @@ import numpy as np
 from Helper_functions import *
 
 
-# TODO: Sort in a fashion that one finds things!!
 
 
 def word_familarity(document_word, familarity_dict):
