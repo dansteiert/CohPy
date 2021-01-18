@@ -44,12 +44,6 @@ def Flescher_Kincaid_Grade_Level(document_words, document_syllables, num_sentenc
     return 0.39 * ASL + 11.8 * ASW - 15.59
 
 
-# TODO:
-### Things to include:
-
-#   COmbine content words (Nouns, lexical verbs, adjectives and adverbs) and functional words (the rest?), and calculate this indice again
-# NP, VP: Verb oder Substantive des Satzes  ist Kopf des Satzes (wichtigester bestandteil) Willkür?!
-
 
 # TODO: Excluded are Noun Phrases (lack of implementation/knowledge)
 def co_reference_matrix(document_tag, document_lemma, accept_tags=[], accept_tags_start_with=["N", "P"],

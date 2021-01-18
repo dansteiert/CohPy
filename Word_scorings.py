@@ -1,8 +1,8 @@
 import pandas as pd
 from Helper_functions import *
 
-def load_score_file(path_to_file):
-    df = pd.read_csv(path_to_file, sep=",")
+def load_score_file(path_to_file, sep=","):
+    df = pd.read_csv(path_to_file, sep=sep)
     return df
 
 
@@ -13,7 +13,7 @@ def mean_concretness(lemma, list_dict):
         temp = list_dict.get(i, None)
         # temp = concretness(lemma=i, df=df)
         if temp is not None:
-            conc.append(float(temp.replace(",", ".")))
+            conc.append(temp)
             hitrate += 1
     # print(conc)
     hitrate /= len(lemma)

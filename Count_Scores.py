@@ -41,7 +41,7 @@ def word_length(document_word):
     return mean_of_list([len(i) for i in document_word])
 
 
-# TODO: Dividing by 1000 or something relative
+# TODO: Dividing by 1000 or something relative -> Look it up and include, if necessary
 def POS_frequency(document_tags, accept_tags=[], accept_tags_start_with=[], exclude_tags=[],
                   exclude_tags_start_with=["$"]):
     # where is it used/implemented? - what type should be returned?
@@ -76,23 +76,3 @@ def word_repetition(document_lemma, document_tags, accept_tags=[], accept_tags_s
     num_word_repetitions = sum(repeated_terms)
     return (count_repeated_words, num_word_repetitions)
 
-# # TODO:
-# def count_connective_words(document_words, connective_words=["daher", "darum", "deshalb", "dementsprechend"]):
-#   # TODO: Need a larger set of connective words! and maybe devide by those categories
-#   #  LEMMA? -> use tags?
-#   #  isnt it the conjungtions?
-#   #  Connectives:
-#   #  (1) clarifying connectives, such as in other words and that is;
-#   #  (2) additive connectives, such as also and moreover;
-#   #  (3) temporal connectives, such as after, before, and when; and
-#   #  (4) causal connectives, such as because, so, and consequently.
-#   #  On another dimension, there is a contrast between positive
-#   #  and negative connectives. For example, adversative additive
-#   #  connectives (e.g., however, in contrast) and adversative
-#   #  causal connectives (e.g., although) are negative.
-#
-#   counter = 0
-#   for i in document_words:
-#     if i in connective_words:
-#       counter += 1
-#   return counter

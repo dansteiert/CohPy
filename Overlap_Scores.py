@@ -46,17 +46,19 @@ def overlap_matrix(lemma_by_segment, tags_by_segment, accept_tags=[], accept_tag
 def overlap_matrix_sentiment(w2v_model, lemma_by_segment, tags_by_segment, accept_tags=[], accept_tags_start_with=[],
                              exclude_tags=[], exclude_tags_start_with=[]):
     v = 0
-    hit_elements = 0
-    searched_elements = 0
+    hit_ratio = []
     for index_a, (l_a, t_a) in enumerate(zip(lemma_by_segment, tags_by_segment)):
-        v_temp, h_temp, s_temp = sentence_similarity(w2v=w2v_model, sent_a_lemma=l_a, sent_a_tags=t_a,
+        if index_a + 1 >= len(lemma_by_segment):
+            continue
+        v_temp, hr_temp = sentence_similarity(w2v=w2v_model, sent_a_lemma=l_a, sent_a_tags=t_a,
                                                      sent_b_lemma=lemma_by_segment[index_a + 1],
                                                      sent_b_tags=tags_by_segment[index_a + 1], accept_tags=accept_tags,
                                                      accept_tags_start_with=accept_tags_start_with,
                                                      exclude_tags=exclude_tags,
                                                      exclude_tags_start_with=exclude_tags_start_with)
+        # print(v_temp, hr_temp)
+        if v_temp == 0 and hr_temp == 0:
+            continue
         v += v_temp
-        hit_elements += h_temp
-        searched_elements += s_temp
-    hitrate = hit_elements / searched_elements
-    return v, hitrate
+        hit_ratio.append(hr_temp)
+    return v, mean_of_list(hit_ratio)

@@ -30,6 +30,32 @@ print(datetime.datetime.now(), "program loaded")
 
 
 
+## Databases for evaluations:
+# MRC Psycholinguistic Database - can be watched and queried but not downloaded easily
+# https://www.ldc.upenn.edu/language-resources/data/obtaining ## Needs Payment to access databases??
+# TACCO data: Say more and be more coherent: How text elaboration and cohesion can increase writing quality.
+# Predicting math performance using natural language processing tools. In LAK ’17: Proceedings of the 7th International Learning Analytics and knowledge Conference: Understanding, informing and improvinglearning with data
+# TASA not really found - http://lsa.colorado.edu/spaces.html - link to TASA does not work.
+
+## get books from Gutenberg Project:
+# http://self.gutenberg.org/CollectionCatalog.aspx
+# ADd own Corpora - Where to find them in "plain text"? - DOes one has to create them by themselves?
+# a good page to find them?
+
+# WordNet Synonyms - Verb Synonyms; also Semantic overlap -> If hard for German, still include?
+
+# TODO: Implementation:
+#  o Word Frequency ->w2v/concretness Scores?
+#  o Topic Modelling with LDA Mallet (Ask Christoph and Bae)
+#  o Verb Synonyms -> WordNet
+#  o Correfference Matrix -> Look it up again
+#  o Causal Cohesion Score -> Look it up again
+#  o POS_Frequency vs Lexical Diversity -> Look it up again
+#  o Content_functional_ratio -> where to get functional and content words from?
+#  o LDA Mallet  + Proper preprocessing
+
+
+
 ## enter the text:
 from nltk.corpus import gutenberg
 text = gutenberg.raw("carroll-alice.txt")
@@ -39,8 +65,24 @@ text = gutenberg.raw("carroll-alice.txt")
 select_language = "en"
 
 # Chose files for Concretness and the w2v model
-df_conc = load_score_file("data\\350k_ims_sorted copy.dat")
+
+## Concretness english:
+concretness_label = "AbsConc"
+word_label = "WORD"
+df_conc = load_score_file("data\\Twitter_SGNS_AffectiveSpace.rsc.csv", sep="\t")
+
+
+# ## Concretness german:
+# concretness_label = "AbstCon"
+# word_label = "WORD"
+# df_conc = load_score_file("data\\affective_norms.txt", sep="\t")
+
+
+# W2V Model
+### Small Model
 # w2v_model = load_w2v("data\\250kGLEC_sg500.vec")
+## Larger Model
+w2v_model = load_w2v("data\\120sdewac_sg300.vec")
 
 ## TreeTagger files need to be downloaded here: https://cis.uni-muenchen.de/~schmid/tools/TreeTagger/
 # Tagsets can also be found on this page. Add them to the lib folder of TreeTagger
@@ -203,7 +245,6 @@ print(datetime.datetime.now(), "Count Scores started")
 mean_word_length = word_length(document_word=words)
 syllables_list = syllable_count(document_words=words)
 mean_syllables = mean_of_list(syllables_list)
-print(max(syllables_list), min(syllables_list))
 count_logicals = count_tags(document_tags=tags, accept_tags=logical_accept_tags,
                             accept_tags_start_with=logical_accept_tags_start_with, exclude_tags=logical_exclude_tags,
                             exclude_tags_start_with=logical_exclude_tags_start_with)
@@ -287,7 +328,7 @@ verbs_overlap = overlap_matrix(lemma_by_segment=lemma_by_seg, tags_by_segment=ta
 
 print(datetime.datetime.now(), "Concretness Score started")
 # <editor-fold desc="Concretness Score">
-list_dict_conc = list_to_dict(df=df_conc, column="AbstConc")
+list_dict_conc = list_to_dict(df=df_conc, column=concretness_label, identifier=word_label)
 mean_concretness, hitrate_conc = mean_concretness(lemma=lemma, list_dict=list_dict_conc)
 
 # </editor-fold>
@@ -295,11 +336,11 @@ mean_concretness, hitrate_conc = mean_concretness(lemma=lemma, list_dict=list_di
 
 print(datetime.datetime.now(), "Sentiment Overlap started")
 # <editor-fold desc="Sentiment Overlap">
-# sentiment_overlap = overlap_matrix_sentiment(w2v_model=w2v_model, lemma_by_sentence=lemma_by_sentence,
-#                                              tags_by_sentence=tags_by_sentence,   accept_tags=nouns_accept_tags,
-#                                              accept_tags_start_with=nouns_accept_tags_start_with, exclude_tags=nouns_exclude_tags,
-#                                              exclude_tags_start_with =nouns_exclude_tags_start_with)
-# TODO: w2v model does not load properly! (only the smaller one)
+sentiment_overlap, sentiment_hitrate = overlap_matrix_sentiment(w2v_model=w2v_model, lemma_by_segment=lemma_by_seg,
+                                             tags_by_segment=tags_by_seg,   accept_tags=nouns_accept_tags,
+                                             accept_tags_start_with=nouns_accept_tags_start_with, exclude_tags=nouns_exclude_tags,
+                                             exclude_tags_start_with =nouns_exclude_tags_start_with)
+## TODO: w2v model does not load properly! (only the smaller one)
 # </editor-fold>
 
 
@@ -351,35 +392,31 @@ for name, value in zip(list_of_results_names, list_of_results):
 
 print(datetime.datetime.now(), "Finished")
 
-# TODO:
-#  CohMatrix
-#  o A database of lots of German or what ever other language, texts.
-#       - Wordfrequency/Familarity of words
-#  o A dictionary with many words and Scores for:
-#       - Concrete/Absrtactness -> Hypernmys
-#       - Ease of Imagability
-#       - Meaningfullness ratings (not sure if they are applicable to German)
-#       - Age of Aquisition (at what age does one usually learn those words
-#       -Polysemy: how many meanings has a word
-#  o How to retive the kind of sentence (or parts) one has NP/ VP
-#  o set of causal verbs and particles -> causal cohesion
-#  TACCO:
-#  o DB of texts
-#  generally extend code to n-grams!
-#  adapt for multiple languages (as far as possible)
-
-
-## DBS:
-# MRC Psycholinguistic Database - can be watched and queried but not downloaded easily
-# https://www.ldc.upenn.edu/language-resources/data/obtaining ## Needs Payment to access databases??
-# WordNet Synonyms - Verb Synonyms; also Semantic overlap
-# TACCO data: Say more and be more coherent: How text elaboration and cohesion can increase writing quality.
-# Predicting math performance using natural language processing tools. In LAK ’17: Proceedings of the 7th International Learning Analytics and knowledge Conference: Understanding, informing and improvinglearning with data
-# TASA not really found - http://lsa.colorado.edu/spaces.html - link to TASA does not work.
-
-## get books from Gutenberg Project:
-# http://self.gutenberg.org/CollectionCatalog.aspx
-# ADd own Corpora - Where to find them in "plain text"? - DOes one has to create them by themselfes?
 
 
 
+## Results:
+# ALICE IN WONDERLAND
+# mean_word_length: 3.4070
+# mean_syllables: 1.3940
+# count_logicals: 1083.0000
+# count_conjugations: 1826.0000
+# mean_sentence_length: 19.8384
+# mean_punctuations: 3.0532
+# mean_lexical_diversity: 8.1732
+# type_token_ratio_nouns: 0.0009
+# type_token_ratio_verbs: 0.0040
+# type_token_ratio_adverbs: 0.0012
+# type_token_ratio_adjectives: 0.0023
+# FRE: 94.6390
+# FKGL: 5.2359
+# count_repeated_words: 1192.0000
+# num_word_repetitions: 15593.0000
+# mean_concretness: 2.2330
+# hitrate_conc: 0.3665
+# nouns_overlap: 556.0000
+# verbs_overlap: 1082.0000
+# adverbs_overlap: 243.0000
+# adjectives_overlap: 85.0000
+# sentiment_overlap: 277.59969237446785
+# sentiment_hitrate : 0.8322338076456883

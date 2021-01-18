@@ -153,8 +153,9 @@ def split_at_newline(text, sep="\n"):
 
     return segmented
 
-def list_to_dict(df, column):
+def list_to_dict(df, identifier, column):
+    # might need to check for string values
     list_dict = {}
-    for w, c in zip(df["Word"].tolist(), df[column].tolist()):
+    for w, c in zip(df[identifier].tolist(), df[column].tolist()):
         list_dict[w] = c
     return list_dict
