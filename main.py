@@ -36,23 +36,66 @@ print(datetime.datetime.now(), "program loaded")
 # TACCO data: Say more and be more coherent: How text elaboration and cohesion can increase writing quality.
 # Predicting math performance using natural language processing tools. In LAK ’17: Proceedings of the 7th International Learning Analytics and knowledge Conference: Understanding, informing and improvinglearning with data
 # TASA not really found - http://lsa.colorado.edu/spaces.html - link to TASA does not work.
+# von Tübbinger Gruppe!
+
+# https://compstat-lmu.github.io/seminar_nlp_ss20/resources-and-benchmarks-for-nlp.html
+## Reading Comprehension datasets - lots of them - try to answer question specific for a given text.
+
+
 
 ## get books from Gutenberg Project:
 # http://self.gutenberg.org/CollectionCatalog.aspx
 # ADd own Corpora - Where to find them in "plain text"? - DOes one has to create them by themselves?
 # a good page to find them?
 
-# WordNet Synonyms - Verb Synonyms; also Semantic overlap -> If hard for German, still include?
+# WordNet Synonyms - Verb Synonyms; also Semantic overlap ->Include just for english
+
+# https://github.com/joeworsh/ai-lit
+
+# TODO: Booklist
+#  Source Good reads:
+##  Children Books:
+#  o The very hungrey caterpillar /Raupe Nimmersatt
+#  o The Rainbow Fish
+#  o Winnie the Pooh
+#  o Tom Sawyer
+#  o Pippi Longstockings/ Pipi Langstrumpf
+#  o The Chronicals of Narnia??
+#  o THe little Prince
+#  o Charlie and the Chocolate Factory
+#  o The Hobbit
+##  Intermediat Reads:
+#  o Harry Potter 1-7
+#  o Lord of the Rings
+## Difficult Reads:
+#  o Ulysses -James Joyce
+#  o Finnigans Wake -James Joyce
+#  o Moby Dick
+#  o War and Peace - Leo Tolstory
+#  o The Name of the Rose
+#  o Buddenbrooks - Thomas Mann
+#  o Doktor Faustus - Thomas Mann
+#  o Die Hermannsschalcht  v. Kleist
+#  o Die Marrquise von O  v. Kleist
+#  o Katechismus der Deutschen  v. Kleist
+
 
 # TODO: Implementation:
 #  o Word Frequency ->w2v/concretness Scores?
 #  o Topic Modelling with LDA Mallet (Ask Christoph and Bae)
-#  o Verb Synonyms -> WordNet
+#  o Verb Synonyms -> WordNet!!!
 #  o Correfference Matrix -> Look it up again
 #  o Causal Cohesion Score -> Look it up again
 #  o POS_Frequency vs Lexical Diversity -> Look it up again
 #  o Content_functional_ratio -> where to get functional and content words from?
 #  o LDA Mallet  + Proper preprocessing
+#  Word frequency - List von Art! - log_f; und syllben count
+
+
+# TODO:
+#  Idea - Calculate the Scores for every thing (english and german -> separet those) apply some clustering
+#  and define for each cluster "how hard it is to read", by selecting a clouple data points per cluster.
+#  Do a min word threshold per Document
 
 
 
