@@ -27,12 +27,6 @@ def download_files(data, path_for_download):
                     print(i["url"], "not found")
                 break
 
-path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.json")
-path_for_download = os.path.join(os.getcwd(), "data", "Gutenberg", "txt_files")
-
-data = load_gutenberg(path)
-download_files(data=data, path_for_download=path_for_download)
-
 
 def search_title(data, title):
     book_check = [i for i in data["books"] if title in i["title"].lower()]
