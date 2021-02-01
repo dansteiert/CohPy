@@ -52,6 +52,10 @@ from Pipeline import *
 
 # https://github.com/joeworsh/ai-lit
 
+
+# https://github.com/andreasvc/readability
+
+
 # TODO: Booklist
 #  Source Good reads:
 ##  Children Books:
@@ -98,6 +102,8 @@ from Pipeline import *
 #  Do a min word threshold per Document
 
 
+
+# TODO: size restriction!
 def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.json"), Gutenberg_path_for_download = os.path.join(os.getcwd(), "data", "Gutenberg", "txt_files")):
     print(datetime.datetime.now(), "program loaded")
     
@@ -106,9 +112,9 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
     
     print(datetime.datetime.now(), "Load Gutenberg Meta data")
     gutenberg_meta_data = load_gutenberg(Gutenberg_path)
-    # if not os.path.join(Gutenberg_path_for_download, "%s.txt" % gutenberg_meta_data["books"][-1]["id"]):
-    #     print(datetime.datetime.now(), "Download Gutenberg data - Non German IP needed!")
-    #     download_files(data=gutenberg_meta_data, path_for_download=Gutenberg_path_for_download)
+    if not os.path.isfile(os.path.join(Gutenberg_path_for_download, "%s.txt" % gutenberg_meta_data["books"][-1]["id"])):
+        print(datetime.datetime.now(), "Download Gutenberg data - Non German IP needed!")
+        download_files(data=gutenberg_meta_data, path_for_download=Gutenberg_path_for_download)
     gutenberg_books = gutenberg_meta_data["books"]
 
     print(datetime.datetime.now(), "Load V2W model")
@@ -116,8 +122,8 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
     ### Small Model
     # w2v_model = load_w2v("data\\250kGLEC_sg500.vec")
     ## Larger Model
-    # w2v_model = load_w2v("data\\120sdewac_sg300.vec")
-    w2v_model = None
+    w2v_model = load_w2v("data\\120sdewac_sg300.vec")
+    # w2v_model = None
     
     print(datetime.datetime.now(), "Load Tree Tagger")
     ## TreeTagger
@@ -133,10 +139,10 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
     df_conc = load_score_file(os.path.join(os.getcwd(),"data", "Twitter_SGNS_AffectiveSpace.rsc.csv"), sep="\t")
     list_dict_conc_en = list_to_dict(df=df_conc, column=concretness_label, identifier=word_label)
     # ## Concretness german:
-    # concretness_label = "AbstCon"
-    # word_label = "WORD"
-    # df_conc = load_score_file(os.path.join(os.getcwd(),"data", "affective_norms.txt"), sep="\t")
-    # list_dict_conc_de = list_to_dict(df=df_conc, column=concretness_label, identifier=word_label)
+    concretness_label = "AbstCon"
+    word_label = "WORD"
+    df_conc = load_score_file(os.path.join(os.getcwd(),"data", "affective_norms.txt"), sep="\t")
+    list_dict_conc_de = list_to_dict(df=df_conc, column=concretness_label, identifier=word_label)
 
 
     ## Check if some work was already done:
@@ -152,7 +158,7 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
                         "mean_lexical_diversity", "type_token_ratio_nouns", "type_token_ratio_verbs",
                         "type_token_ratio_adverbs", "type_token_ratio_adjectives", "FRE", "FKGL", "count_repeated_words",
                         "num_word_repetitions", "mean_concretness", "hitrate_conc", "nouns_overlap",
-                        "verbs_overlap", "adverbs_overlap", "adjectives_overlap"]
+                        "verbs_overlap", "adverbs_overlap", "adjectives_overlap", "sentiment_overlap", "sentiment_hitrate", "topic_overlap"]
         with open(os.path.join(os.getcwd(), "data", "score_collection.tsv"), "w") as file:
             file.write("\t".join(column_names))
             file.write("\n")
@@ -174,6 +180,8 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
             print("language not yet implemented", language)
             continue
         try:
+            if os.stat(os.path.join(Gutenberg_path_for_download, "%s.txt" % i["id"])).st_size >=2500:
+                continue
             with open(os.path.join(Gutenberg_path_for_download, "%s.txt" % i["id"]), "r") as txt:
                 text = txt.readlines()
                 text = "".join(text)
@@ -181,12 +189,11 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
             continue
         if language == "en":
             temp_list = pipeline(text=text, language=language, w2v_model=w2v_model, list_dict_conc=list_dict_conc_en, tagger=t_tagger_en)
-        # elif language == "de":
-        #     temp_list = pipeline(text=text, language=language, w2v_model=w2v_model, list_dict_conc=list_dict_conc_de, tagger=t_tagger_de)
+        elif language == "de":
+            temp_list = pipeline(text=text, language=language, w2v_model=w2v_model, list_dict_conc=list_dict_conc_de, tagger=t_tagger_de)
         else:
             print("language not yet implemented", language)
 
-        # meta_list = [index, i["id"], i["title"], i["authors"][0]["name"], language, i["categories"]]
         try:
             title = i["title"]
             title = title.replace("\r", " ")
@@ -204,13 +211,6 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
             
         meta_list.extend(temp_list)
         meta_list = [str(j) for j in meta_list]
-        # temp_list["language"] = language
-        # temp_dict["title"] = i["title"]
-        # temp_dict["author"] = i["authors"][0]["name"]
-        # temp_dict["categories"] = i["categories"]
-        # temp_dict["gutenberg_id"] = i["id"]
-        # temp_dict["position_id"] = index
-        # dict_collection.append(temp_dict)
         with open(os.path.join(os.getcwd(), "data", "score_collection.tsv"), "a") as file:
             file.write("\t".join(meta_list))
             file.write("\n")

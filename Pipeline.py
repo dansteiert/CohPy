@@ -268,12 +268,12 @@ def pipeline(text, language, w2v_model, tagger, list_dict_conc):
 
     # print(datetime.datetime.now(), "Sentiment Overlap started")
     # <editor-fold desc="Sentiment Overlap">
-    # sentiment_overlap, sentiment_hitrate = overlap_matrix_sentiment(w2v_model=w2v_model, lemma_by_segment=lemma_by_seg,
-    #                                                                 tags_by_segment=tags_by_seg,
-    #                                                                 accept_tags=nouns_accept_tags,
-    #                                                                 accept_tags_start_with=nouns_accept_tags_start_with,
-    #                                                                 exclude_tags=nouns_exclude_tags,
-    #                                                                 exclude_tags_start_with=nouns_exclude_tags_start_with)
+    sentiment_overlap, sentiment_hitrate = overlap_matrix_sentiment(w2v_model=w2v_model, lemma_by_segment=lemma_by_seg,
+                                                                    tags_by_segment=tags_by_seg,
+                                                                    accept_tags=nouns_accept_tags,
+                                                                    accept_tags_start_with=nouns_accept_tags_start_with,
+                                                                    exclude_tags=nouns_exclude_tags,
+                                                                    exclude_tags_start_with=nouns_exclude_tags_start_with)
     ## TODO: w2v model does not load properly! (only the smaller one)
     # </editor-fold>
 
@@ -294,6 +294,7 @@ def pipeline(text, language, w2v_model, tagger, list_dict_conc):
     # dictionary, doc_freq_matrix, tfidf = preprocessing(corpus_tokens=lemmas)
     # lsa_model = LSA(df_matrix=doc_freq_matrix, dictionary=dictionary)
     # lda_model = LDA(df_matrix=doc_freq_matrix, dictionary=dictionary)
+    topic_overlap = None
     # </editor-fold>
 
     # print(datetime.datetime.now(), "Result output")
@@ -301,7 +302,7 @@ def pipeline(text, language, w2v_model, tagger, list_dict_conc):
                        mean_punctuations, mean_lexical_diversity, type_token_ratio_nouns,
                        type_token_ratio_verbs, type_token_ratio_adverbs, type_token_ratio_adjectives,
                        FRE, FKGL, count_repeated_words, num_word_repetitions, mean_concretness_score, hitrate_conc,
-                       nouns_overlap, verbs_overlap, adverbs_overlap, adjectives_overlap]
+                       nouns_overlap, verbs_overlap, adverbs_overlap, adjectives_overlap, sentiment_overlap, sentiment_hitrate, topic_overlap]
 
     # list_of_results_names = ["mean_word_length", "mean_syllables", "count_logicals", "count_conjugations",
     #                          "mean_sentence_length",
