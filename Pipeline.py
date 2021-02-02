@@ -9,118 +9,31 @@ from Word_scorings import *
 
 def pipeline(text, language, w2v_model, tagger, list_dict_conc):
     
-    
     if language == "de":
-        # <editor-fold desc="German Tagset">
-        ## Nouns:
-        nouns_accept_tags = []
-        nouns_accept_tags_start_with = ["N"]
-        nouns_exclude_tags = []
-        nouns_exclude_tags_start_with = []
-        ## Pronouns:
-        pronouns_accept_tags = []
-        pronouns_accept_tags_start_with = ["P"]
-        pronouns_exclude_tags = ["PTK"]
-        pronouns_exclude_tags_start_with = []
-        ## Verbs:
-        verbs_accept_tags = []
-        verbs_accept_tags_start_with = ["V"]
-        verbs_exclude_tags = []
-        verbs_exclude_tags_start_with = []
-        ## Adverbs:
-        adverbs_accept_tags = ["ADV"]
-        adverbs_accept_tags_start_with = []
-        adverbs_exclude_tags = []
-        adverbs_exclude_tags_start_with = []
-        ## adjectives:
-        adjectives_accept_tags = ["ADJA", "ADJD"]
-        adjectives_accept_tags_start_with = []
-        adjectives_exclude_tags = []
-        adjectives_exclude_tags_start_with = []
-        ## Punctuation:
-        punctuation_accept_tags = []
-        punctuation_accept_tags_start_with = ["$"]
-        punctuation_exclude_tags = []
-        punctuation_exclude_tags_start_with = []
-        ## Punctuation Sentence Finishing:
-        punctuation_fin_accept_tags = ["$."]
-        punctuation_fin_accept_tags_start_with = []
-        punctuation_fin_exclude_tags = []
-        punctuation_fin_exclude_tags_start_with = []
-        ## Conjugations:
-        conjugations_accept_tags = []
-        conjugations_accept_tags_start_with = ["K"]
-        conjugations_exclude_tags = []
-        conjugations_exclude_tags_start_with = []
-        ## Logicals:
-        logical_accept_tags = ["KON", "KOKOM"]
-        logical_accept_tags_start_with = []
-        logical_exclude_tags = []
-        logical_exclude_tags_start_with = []
-        ## Word_count:
-        count_accept_tags = ["AD"]
-        count_accept_tags_start_with = []
-        count_exclude_tags = []
-        count_exclude_tags_start_with = ["A", "C", "I", "K", "P", "T", "$"]
-        # </editor-fold>
+        from Tagset_de import nouns_accept_tags, nouns_accept_tags_start_with, nouns_exclude_tags, nouns_exclude_tags_start_with
+        from Tagset_de import pronouns_accept_tags, pronouns_accept_tags_start_with, pronouns_exclude_tags, pronouns_exclude_tags_start_with
+        from Tagset_de import verbs_accept_tags, verbs_accept_tags_start_with, verbs_exclude_tags, verbs_exclude_tags_start_with
+        from Tagset_de import adverbs_accept_tags, adverbs_accept_tags_start_with, adverbs_exclude_tags, adverbs_exclude_tags_start_with
+        from Tagset_de import adjectives_accept_tags, adjectives_accept_tags_start_with, adjectives_exclude_tags, adjectives_exclude_tags_start_with
+        from Tagset_de import punctuation_accept_tags, punctuation_accept_tags_start_with, punctuation_exclude_tags, punctuation_exclude_tags_start_with
+        from Tagset_de import punctuation_fin_accept_tags, punctuation_fin_accept_tags_start_with, punctuation_fin_exclude_tags, punctuation_fin_exclude_tags_start_with
+        from Tagset_de import conjugations_accept_tags, conjugations_accept_tags_start_with, conjugations_exclude_tags, conjugations_exclude_tags_start_with
+        from Tagset_de import logical_accept_tags, logical_accept_tags_start_with, logical_exclude_tags, logical_exclude_tags_start_with
+        from Tagset_de import count_accept_tags, count_accept_tags_start_with, count_exclude_tags, count_exclude_tags_start_with
+
     elif language == "en":
-        # <editor-fold desc="English Tagset">
-        ## Tag set discription can be found at: http://www.natcorp.ox.ac.uk/docs/c5spec.html
-        
-        ## Nouns:
-        nouns_accept_tags = []
-        nouns_accept_tags_start_with = ["N"]
-        nouns_exclude_tags = []
-        nouns_exclude_tags_start_with = []
-        ## Pronouns:
-        pronouns_accept_tags = []
-        pronouns_accept_tags_start_with = ["P"]
-        pronouns_exclude_tags = ["PU", "PR", "PO"]
-        pronouns_exclude_tags_start_with = []
-        ## Verbs:
-        verbs_accept_tags = []
-        verbs_accept_tags_start_with = ["V"]
-        verbs_exclude_tags = []
-        verbs_exclude_tags_start_with = []
-        ## Adverbs:
-        adverbs_accept_tags = []
-        adverbs_accept_tags_start_with = ["A"]
-        adverbs_exclude_tags = ["AJ", "AT"]
-        adverbs_exclude_tags_start_with = []
-        ## adjectives:
-        adjectives_accept_tags = []
-        adjectives_accept_tags_start_with = ["A"]
-        adjectives_exclude_tags = ["AV", "AT"]
-        adjectives_exclude_tags_start_with = []
-        ## Punctuation:
-        punctuation_accept_tags = []
-        punctuation_accept_tags_start_with = ["P", "S"]
-        punctuation_exclude_tags = ["PR", "PO", "PN"]
-        punctuation_exclude_tags_start_with = []
-        ## Punctuation Sentence Finishing:
-        punctuation_fin_accept_tags = []
-        punctuation_fin_accept_tags_start_with = ["S"]
-        punctuation_fin_exclude_tags = []
-        punctuation_fin_exclude_tags_start_with = []
-        ## Conjugations:
-        conjugations_accept_tags = []
-        conjugations_accept_tags_start_with = ["C"]
-        conjugations_exclude_tags = ["CR"]
-        conjugations_exclude_tags_start_with = []
-        ## Logicals:
-        logical_accept_tags = ["CJC"]
-        logical_accept_tags_start_with = []
-        logical_exclude_tags = []
-        logical_exclude_tags_start_with = []
-        ## Word_count:
-        count_accept_tags = []
-        count_accept_tags_start_with = []
-        count_exclude_tags = ["AT0", "CRD", ]
-        count_exclude_tags_start_with = ["S", "P", "D", "I", "E", "T", "X", "Z"]
-        # </editor-fold>
+        from Tagset_en import nouns_accept_tags, nouns_accept_tags_start_with, nouns_exclude_tags, nouns_exclude_tags_start_with
+        from Tagset_en import pronouns_accept_tags, pronouns_accept_tags_start_with, pronouns_exclude_tags, pronouns_exclude_tags_start_with
+        from Tagset_en import verbs_accept_tags, verbs_accept_tags_start_with, verbs_exclude_tags, verbs_exclude_tags_start_with
+        from Tagset_en import adverbs_accept_tags, adverbs_accept_tags_start_with, adverbs_exclude_tags, adverbs_exclude_tags_start_with
+        from Tagset_en import adjectives_accept_tags, adjectives_accept_tags_start_with, adjectives_exclude_tags, adjectives_exclude_tags_start_with
+        from Tagset_en import punctuation_accept_tags, punctuation_accept_tags_start_with, punctuation_exclude_tags, punctuation_exclude_tags_start_with
+        from Tagset_en import punctuation_fin_accept_tags, punctuation_fin_accept_tags_start_with, punctuation_fin_exclude_tags, punctuation_fin_exclude_tags_start_with
+        from Tagset_en import conjugations_accept_tags, conjugations_accept_tags_start_with, conjugations_exclude_tags, conjugations_exclude_tags_start_with
+        from Tagset_en import logical_accept_tags, logical_accept_tags_start_with, logical_exclude_tags, logical_exclude_tags_start_with
+        from Tagset_en import count_accept_tags, count_accept_tags_start_with, count_exclude_tags, count_exclude_tags_start_with
     else:
-        print("no fitting language found")
-        return -1
+        print("Language not yet implemented - add Tagset_LANG.py file and import it in the pipline file.")
 
     # print(datetime.datetime.now(), "preprocessing started")
     # <editor-fold desc="Preprocessing">
@@ -268,12 +181,16 @@ def pipeline(text, language, w2v_model, tagger, list_dict_conc):
 
     # print(datetime.datetime.now(), "Sentiment Overlap started")
     # <editor-fold desc="Sentiment Overlap">
-    sentiment_overlap, sentiment_hitrate = overlap_matrix_sentiment(w2v_model=w2v_model, lemma_by_segment=lemma_by_seg,
+    if w2v_model is not None:
+        sentiment_overlap, sentiment_hitrate = overlap_matrix_sentiment(w2v_model=w2v_model, lemma_by_segment=lemma_by_seg,
                                                                     tags_by_segment=tags_by_seg,
                                                                     accept_tags=nouns_accept_tags,
                                                                     accept_tags_start_with=nouns_accept_tags_start_with,
                                                                     exclude_tags=nouns_exclude_tags,
                                                                     exclude_tags_start_with=nouns_exclude_tags_start_with)
+    else:
+        sentiment_overlap = None
+        sentiment_hitrate = None
     ## TODO: w2v model does not load properly! (only the smaller one)
     # </editor-fold>
 

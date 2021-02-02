@@ -108,8 +108,9 @@ def to_count_dict(aggregate_list):
 
 
 def mean_of_list(l):
-    return sum(l) / len(l)
-
+    if len(l) > 0:
+        return sum(l) / len(l)
+    return 0
 
 def variance_of_list(l):
     m = mean_of_list(l)

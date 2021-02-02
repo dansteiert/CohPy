@@ -35,5 +35,11 @@ def search_title(data, title):
 
 def find_author(data, author):
     author_check = [i for i in data["books"] for j in i["authors"] if author in j["name"]]
+    id_list = []
     for i in author_check:
+        id_list.append(i["id"])
         print(i)
+    return id_list
+        
+
+
