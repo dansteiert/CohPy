@@ -160,7 +160,7 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
             # with open(os.path.join(os.getcwd(), "data", "score_collection_selected_ids.tsv"), "w") as file:
             #     file.write("\t".join(column_names))
             #     file.write("\n")
-            current_pointer = 98
+            current_pointer = 0
         
         print(datetime.datetime.now(), "start loading books (5% steps):")
         # <editor-fold desc="Readability calculation Gutenberg Books">
