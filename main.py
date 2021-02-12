@@ -1,23 +1,11 @@
 import treetaggerwrapper as tt
-import os
-import numpy as np
-import pandas as pd
-import datetime
 
 ## Import Own Functions:
 from Word_scorings import *
 from COhMatrix_scorings import *
-from Treetagger import POS_tagger
-from model_preprocessing import *
-from w2v_model import *
-from LDA_model import *
-from LSA_model import *
-from Helper_functions import *
 from Ratio_Scores import *
-from Count_Scores import *
-from Overlap_Scores import *
-from Load_books import *
-from Pipeline import *
+from Helper.Load_books import *
+from Scoring_functions.Pipeline import *
 
 
 
@@ -28,7 +16,7 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
                                   os.path.join(os.getcwd(),"data", "affective_norms.txt")),
          concretness_score_separator=("\t", "\t"), concretness_score_word=("WORD", "WORD"),
          concretness_score_label=("AbsConc", "AbstCon"),
-         run_Gutenberg=True, selected_Gutenberg=True, run_extra_books=False, run_new_document=False):
+         run_Gutenberg=False, selected_Gutenberg=False, run_extra_books=False, run_new_documents=True):
     print(datetime.datetime.now(), "program loaded")
     
     
@@ -59,9 +47,56 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
     ### Small Model
     # w2v_model = load_w2v("data\\250kGLEC_sg500.vec")
     ## Larger Model
-    w2v_model = load_w2v("data\\120sdewac_sg300.vec")
-    # w2v_model = None
+    # w2v_model = load_w2v("data\\120sdewac_sg300.vec")
+    w2v_model = None
     # </editor-fold>
+
+    
+    if run_new_documents:
+        
+        # <editor-fold desc="Create non Gutenberg books File collection">
+        column_names = ["id", "gutenberg_id", "title", "author", "language", "mean_word_length", "mean_syllables",
+                        "count_logicals", "count_conjugations", "mean_sentence_length", "mean_punctuations",
+                        "mean_lexical_diversity", "type_token_ratio_nouns", "type_token_ratio_verbs",
+                        "type_token_ratio_adverbs", "type_token_ratio_adjectives", "FRE", "FKGL", "count_repeated_words",
+                        "num_word_repetitions", "mean_concretness", "hitrate_conc", "nouns_overlap",
+                        "verbs_overlap", "adverbs_overlap", "adjectives_overlap", "sentiment_overlap", "sentiment_hitrate", "topic_overlap"]
+        with open(os.path.join(os.getcwd(), "data", "score_collection_new_documents.tsv"), "w") as file:
+            file.write("\t".join(column_names))
+            file.write("\n")
+        # </editor-fold>
+
+        new_doc_path = os.path.join(os.getcwd(), "data", "new_documents")
+        new_doc_languages = "en"
+        for i in os.listdir(new_doc_path):
+            try:
+                with open(os.path.join(new_doc_path, i), "r", encoding="utf-8",
+                          errors="replace") as txt:
+                    text = txt.readlines()
+                    text = "".join(text)
+            except:
+                print(i, "exception")
+                continue
+    
+            flipper = False
+            for l, conc_dict, t_tagger in zip(languages, list_dict_conc, tree_tagger):
+                if new_doc_languages == l:
+                    flipper = True
+                    temp_list = pipeline(text=text, language=new_doc_languages, w2v_model=w2v_model, list_dict_conc=conc_dict,
+                                         tagger=t_tagger)
+            if not flipper:
+                print("language not yet implemented", j)
+                continue
+            meta_list = [None, None, i, None, new_doc_languages]
+            meta_list.extend(temp_list)
+            meta_list = [str(j) for j in meta_list]
+    
+            with open(os.path.join(os.getcwd(), "data", "score_collection_new_documents.tsv"), "a") as file:
+                file.write("\t".join(meta_list))
+                file.write("\n")
+        # </editor-fold>
+        
+        
 
 
     if run_extra_books:
@@ -77,7 +112,8 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
             file.write("\t".join(column_names))
             file.write("\n")
         # </editor-fold>
-
+        
+        
         
         # <editor-fold desc="Readability calculations non - Gutenberg Books">
         for j in os.listdir(os.path.join(os.getcwd(), "data", "Extra_books")):
@@ -147,7 +183,7 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
         
         
         if selected_Gutenberg:
-            from Gutenberg_IDs import ID_collection
+            from Helper.Gutenberg_IDs import ID_collection
             ID_collection = sorted(list(set(ID_collection)))
             # column_names = ["id", "gutenberg_id", "title", "author", "language", "mean_word_length", "mean_syllables",
             #                 "count_logicals", "count_conjugations", "mean_sentence_length", "mean_punctuations",

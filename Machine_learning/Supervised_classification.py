@@ -18,7 +18,29 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score, f1_score
 import seaborn as sns
 import os
-from Gutenberg_IDs import *
+from Helper.Gutenberg_IDs import *
+
+
+def evaluate(model, language, feature_list, model_name, mode):
+    if language == "en":
+        df_eval = pd.read_csv(os.path.join(os.getcwd(), "data", "score_collection_christies_styles_eval.tsv"), sep="\t")
+    elif language == "de":
+        df_eval = pd.read_csv(os.path.join(os.getcwd(), "data", "score_collection_luedtke_eval.tsv"), sep="\t")
+    else:
+        print("no fitting language")
+        return -1
+    # print(df_eval.columns)
+    df_eval_pred = df_eval[feature_list]
+    df_eval_pred = df_eval_pred.fillna(value=0)
+    y_pred = model.predict(df_eval_pred)
+    df_eval_corr = pd.DataFrame(data={"Labels": y_pred, "mean_label": df_eval["mean_label"]})
+    sns.heatmap(data=df_eval_corr.corr(), cmap="YlGnBu", annot=True)
+    plt.title("Correlation Heatmap for language %s" % i)
+    plt.tight_layout()
+    plt.savefig(os.path.join(os.getcwd(), "data", "ML Results", "Classification_Correlation_%s_%s_%s.png" % (mode, model_name, language)), dpi=400)
+    plt.clf()
+    
+    
 
 
 def run_Feature_generation():
@@ -28,12 +50,11 @@ def run_Feature_generation():
                      index_col=0, encoding="ISO-8859-1")
     
     complete_feature_list = ["mean_word_length","mean_syllables","count_logicals","count_conjugations","mean_sentence_length",
-                 "mean_punctuations","mean_lexical_diversity","type_token_ratio_nouns","type_token_ratio_verbs",
-                 "type_token_ratio_adverbs","type_token_ratio_adjectives","FRE","FKGL","count_repeated_words",
-                 "num_word_repetitions","mean_concretness", "nouns_overlap","verbs_overlap",
-                 "adverbs_overlap","adjectives_overlap", "sentiment_overlap"]
+                             "mean_punctuations","mean_lexical_diversity","type_token_ratio_nouns","type_token_ratio_verbs",
+                             "type_token_ratio_adverbs","type_token_ratio_adjectives","FRE","FKGL","count_repeated_words",
+                             "num_word_repetitions","mean_concretness", "nouns_overlap","verbs_overlap",
+                             "adverbs_overlap","adjectives_overlap", "sentiment_overlap"]
     
-    # selected_feature_list =
 
     df["label"] = pd.Series([-1] * df.shape[0], index=df.index, dtype="int8")
     df = label_data(df)
@@ -56,7 +77,8 @@ def run_Feature_generation():
         for i in ["RandomForest", "SVM", "NaiveBayes"]:
         # for i in ["NaiveBayes"]:
             for j in ["en", "de"]:
-                classifiers.append(fit_classifier(df_temp, classifier=i, language=j, mode=k))
+                classifiers.append(fit_classifier(df_temp, classifier=i, language=j, mode=k, feature_list=complete_feature_list))
+                # evaluate(model=classifiers[-1], model_name=i, language=j, feature_list=complete_feature_list, mode=k)
 
 
 def normalize(df, columns):

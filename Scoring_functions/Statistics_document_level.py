@@ -1,29 +1,31 @@
-import pandas as pd
-import os
+from Helper.Helper_functions import search_tag_set, to_count_dict
 import numpy as np
-from Helper_functions import *
 
 
-
-
-def word_familarity(document_word, familarity_dict):
-    # retrieve frequency from a DB of Tests
-    count = 0
-    for i in document_word:
-        temp = familarity_dict.get(i, None)
-        if temp is not None:
-            count += temp
-    count /= len(document_word)
-    return count
-
-
-# TODO: causal cohesion
-def casual_cohesion(document):
-    # The total list of causal particles comes either from this short list of verbs or from the causal conjunctions,
-    # transitional adverbs, and causal connectives. The current metric of causal cohesion, which is a primary measure,
-    # is simply a ratio of causal particles (P) to causal verbs (V).
-
-    return None
+def word_frequency(document_lemma, document_tags, accept_tags=[], accept_tags_start_with=[], exclude_tags=[],
+                    exclude_tags_start_with=[]):
+    '''
+    Count unique words and their repetitions and calculate the ratio  Uniquewords by their repetitions.
+    The closer to 1 this ratio, the harder to read is the text. Infinity, means that no such value could be calculated.
+    :param document_lemma: list, list of Lemma
+    :param document_tags: list, list of POS-tags
+    :param accept_tags: list, a set of POS-tag, needed for check_tags function
+    :param accept_tags_start_with: list, a set of POS-tag, needed for check_tags function
+    :param exclude_tags: list, a set of POS-tag, needed for check_tags function
+    :param exclude_tags_start_with: list, a set of POS-tag, needed for check_tags function
+    :return: set(int, int, float), Unique word cound, Sum of repetitions, ratio of Uniquewords by their repetitions
+    '''
+    tag_list = search_tag_set(aggregate=document_lemma, tags=document_tags, accept_tags=accept_tags,
+                              accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
+                              exclude_tags_start_with=exclude_tags_start_with)
+    count_dict = to_count_dict(aggregate_list=tag_list)
+    repeated_terms = [v for k, v in count_dict.items() if v >= 1]
+    count_repeated_words = len(repeated_terms)
+    num_word_repetitions = sum(repeated_terms)
+    if num_word_repetitions > 0:
+        return (count_repeated_words, num_word_repetitions)
+    else:
+        return np.Infinity
 
 
 def Flescher_Reading_Ease(document_words, document_syllables, num_sentences):
@@ -44,25 +46,6 @@ def Flescher_Kincaid_Grade_Level(document_words, document_syllables, num_sentenc
     return 0.39 * ASL + 11.8 * ASW - 15.59
 
 
-## More readability scores: (from Art)
-def readability_metrics(text):
-    """ Returns a dictionary containing all readability scores for a given text """
-    return {
-        'EN: flesch_kincaid_ease': flesch_kincaid_ease(text),
-        'IT: gulpease': gulpease(text),
-        'FR: kandel_moles': kandel_moles(text),
-        'EN: flesch_kincaid_grade': flesch_kincaid_grade(text),
-        'EN: gunning_fog': gunning_fog(text),
-        'EN: coleman_liau': coleman_liau(text),
-        'EN: smog': smog(text),
-        'EN: ari': ari(text),
-        'DE:flesch_kincaid_ease': FKDE(text)
-    }
-
-"""
-Readability indices: higher scores imply "easier" reading
-"""
-#
 # def flesch_kincaid_ease(text):
 #     """ http://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests#Flesch_Reading_Ease
 #     Score	School level	Notes
@@ -148,43 +131,3 @@ Readability indices: higher scores imply "easier" reading
 #     text = preprocess(text)
 #     return 1.0 * six_letter_word_count(text) / sentence_count(text)
 
-
-
-# # TODO: Excluded are Noun Phrases (lack of implementation/knowledge)
-# def co_reference_matrix(document_tag, document_lemma, accept_tags=[], accept_tags_start_with=["N", "P"],
-#                         exclude_tags=["PTK"],
-#                         exclude_tags_start_with=[], punctuation_tag_group=["$."]):
-#     # TODO: redo/rethink
-#
-#     word_dict = {}
-#     sentence_count = 0
-#     for l, t in zip(document_lemma, document_tag):
-#         if check_tags(tag=t, accept_tags=accept_tags, accept_tags_start_with=accept_tags_start_with,
-#                       exclude_tags=exclude_tags, exclude_tags_start_with=exclude_tags_start_with):
-#             temp_dict = word_dict.get(l, [])
-#             temp_dict.append(sentence_count)
-#             word_dict[l] = temp_dict
-#         elif t in punctuation_tag_group:
-#             sentence_count += 1
-#     if sentence_count < 2:
-#         return None
-#
-#     # word_list = word_dict.keys()
-#     co_reference_exists = np.zeros(shape=(sentence_count, sentence_count))
-#     co_reference_dist = np.zeros(shape=(sentence_count, sentence_count))
-#     for val in word_dict.values():
-#         for index, i in enumerate(val):
-#             try:
-#                 for index_j, j in enumerate(val[index + 1:]):
-#                     co_reference_exists[i, j] = 1
-#                     co_reference_dist[i, j] = 1 / abs(i - j)
-#             except:
-#                 pass
-#     local_corefererence_cohesion = (1 / (sentence_count - 1)) * sum(
-#         [i[index + 1] for index, i in enumerate(co_reference_exists) if index + 1 < len(co_reference_exists)])
-#     global_corefererence_cohesion = (1 / (sentence_count * ((sentence_count - 1) / 2))) * np.sum(co_reference_exists)
-#     co_reference_dist_sum = np.sum(co_reference_dist) * 1 / sentence_count
-#     # print(local_corefererence_cohesion, global_corefererence_cohesion, co_reference_dist_sum)
-#     # print(co_reference_dist)
-#     # print(co_reference_exists)
-#     return (local_corefererence_cohesion, global_corefererence_cohesion, co_reference_dist_sum)

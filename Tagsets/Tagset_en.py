@@ -46,9 +46,14 @@ logical_accept_tags = ["CJC"]
 logical_accept_tags_start_with = []
 logical_exclude_tags = []
 logical_exclude_tags_start_with = []
+# ## Word_count:
+# count_accept_tags = []
+# count_accept_tags_start_with = []
+# count_exclude_tags = ["AT0", "CRD", ]
+# count_exclude_tags_start_with = ["S", "P", "D", "I", "E", "T", "X", "Z"]
 ## Word_count:
 count_accept_tags = []
 count_accept_tags_start_with = []
-count_exclude_tags = ["AT0", "CRD", ]
-count_exclude_tags_start_with = ["S", "P", "D", "I", "E", "T", "X", "Z"]
+count_exclude_tags = []
+count_exclude_tags_start_with = []
 # </editor-fold>
