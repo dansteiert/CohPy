@@ -1,10 +1,13 @@
 from Helper.Helper_functions import search_tag_set, to_count_dict
 import numpy as np
 
-def type_token_ratio(document_tags, accept_tags=[], accept_tags_start_with=["N"], exclude_tags=[],
+def type_token_ratio(document_lemma, document_tags, accept_tags=[], accept_tags_start_with=["N"], exclude_tags=[],
                      exclude_tags_start_with=[]):
     '''
-    Calculate the ratio # types/ sum of tokens. A type is a unique POS, a token is the times a type occures
+    Ref: Grasser2004 - Type:Token Ratio
+    Ref: Crossley2016 - Type-token ratio
+    Calculate the ratio # types/ sum of tokens. A type is a unique word, a token is the times a type occures
+    :param document_lemma: list, of lemma
     :param document_tags:  list, of POS-tags
     :param accept_tags: list, a set of POS-tag, needed for check_tags function
     :param accept_tags_start_with: list, a set of POS-tag, needed for check_tags function
@@ -12,9 +15,8 @@ def type_token_ratio(document_tags, accept_tags=[], accept_tags_start_with=["N"]
     :param exclude_tags_start_with: list, a set of POS-tag, needed for check_tags function
     :return: float, ratio # types/ sum of tokens
     '''
-    # count unique words against their repetitions.
-    # split into Nouns and non-Noun content words
-    tag_list_nouns = search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=accept_tags,
+
+    tag_list_nouns = search_tag_set(aggregate=document_lemma, tags=document_tags, accept_tags=accept_tags,
                                     accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
                                     exclude_tags_start_with=exclude_tags_start_with)
     count_dict = to_count_dict(aggregate_list=tag_list_nouns)
@@ -44,13 +46,14 @@ def lexical_diversity(document_tags, accept_tags=[], accept_tags_start_with=[], 
     return len(lexical_terms)
 
 
-# TODO: check for correctness!
-def pronoun_resolution(document_tags, nouns_accept_tags=[], nouns_accept_tags_start_with=["N"], nouns_exclude_tags=[],
+def noun_pronoun_proportion(document_tags, nouns_accept_tags=[], nouns_accept_tags_start_with=["N"], nouns_exclude_tags=[],
                        nouns_exclude_tags_start_with=[],
                        pronouns_accept_tags=["ADJA", "ADJD", "ADV"], pronouns_accept_tags_start_with=["P"],
                        pronouns_exclude_tags=["PTK"],
                        pronouns_exclude_tags_start_with=[]):
     '''
+    Ref: Grasser 2004 - Density Scores
+    Ref: Crossley 2016 - Givenness
     Calculate the ratio of Nouns to Pronouns
     :param document_tags: list, a set of POS-tag, needed for check_tags function
     :param nouns_accept_tags: list, a set of POS-tag, needed for check_tags function
@@ -77,11 +80,24 @@ def pronoun_resolution(document_tags, nouns_accept_tags=[], nouns_accept_tags_st
     return np.Infinity
 
 
-# TODO: get Tagsets for Functional and Content words!
-def content_functional_ratio(document_tags, content_tags=[], content_tags_start_with=["N"], exclude_content_tags=[],
-                             exclude_content_tags_start_with=[], functional_tags=["READUP!"],
+def content_functional_ratio(document_tags, content_tags=[], content_tags_start_with=[], exclude_content_tags=[],
+                             exclude_content_tags_start_with=[], functional_tags=[],
                              functional_tags_start_with=[], exclude_functional_tags=[],
                              exclude_functional_tags_start_with=[]):
+    '''
+    Ref: CohMetrix. Grasser 2004 - Part of Speech
+    A ratio of Content to functional POS elements is calculated.
+    :param document_tags: list, of tags
+    :param content_tags: list, a set of POS-tag, needed for check_tags function
+    :param content_tags_start_with: list, a set of POS-tag, needed for check_tags function
+    :param exclude_content_tags: list, a set of POS-tag, needed for check_tags function
+    :param exclude_content_tags_start_with: list, a set of POS-tag, needed for check_tags function
+    :param functional_tags: list, a set of POS-tag, needed for check_tags function
+    :param functional_tags_start_with: list, a set of POS-tag, needed for check_tags function
+    :param exclude_functional_tags: list, a set of POS-tag, needed for check_tags function
+    :param exclude_functional_tags_start_with: list, a set of POS-tag, needed for check_tags function
+    :return: float, ratio of content to functional POS elements
+    '''
     tag_list_content = search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=content_tags,
                                       accept_tags_start_with=content_tags_start_with, exclude_tags=exclude_content_tags,
                                       exclude_tags_start_with=exclude_content_tags_start_with)

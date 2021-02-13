@@ -1,28 +1,40 @@
 import treetaggerwrapper as tt
+import datetime
+import os
+import pandas as pd
 
 ## Import Own Functions:
-from Word_scorings import *
-from COhMatrix_scorings import *
-from Ratio_Scores import *
-from Helper.Load_books import *
-from Scoring_functions.Pipeline import *
+from Helper.Helper_functions import load_score_file, list_to_dict, load_word_freq
+from Helper.w2v_model import load_w2v
+from Scoring_functions.Pipeline import pipeline
+from Helper.Load_books import load_gutenberg, download_files
 
 
 
 def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.json"),
          Gutenberg_path_for_download = os.path.join(os.getcwd(), "data", "Gutenberg", "txt_files"),
          Treetagger_loc="C:\\TreeTagger", languages=("en", "de"),
-         concretness_score_paths=(os.path.join(os.getcwd(),"data", "Twitter_SGNS_AffectiveSpace.rsc.csv"),
-                                  os.path.join(os.getcwd(),"data", "affective_norms.txt")),
-         concretness_score_separator=("\t", "\t"), concretness_score_word=("WORD", "WORD"),
-         concretness_score_label=("AbsConc", "AbstCon"),
+         affinity_score_paths=(os.path.join(os.getcwd(),"data", "Score files", "Twitter_SGNS_AffectiveSpace.rsc.csv"),
+                                  os.path.join(os.getcwd(),"data", "Score files", "affective_norms.txt")),
+         affinity_score_separator=("\t", "\t"), affinity_identifier=("WORD", "WORD"),
+         affinity_score_label=(["Anger", "Arousal", "Disgust", "Fear", "Happiness", "Joy", "Sadness", "Valency"],
+                               ["Anger", "Arousal", "Disgust", "Fear", "Happiness", "Joy", "Sadness", "Valency"]),
+         concreteness_score_label=("AbsConc", "AbstCon"),
+         word_freq_path=(os.path.join(os.getcwd(),"data", "Score files", "eng_wikipedia_2016_1M-words.txt"),
+                         os.path.join(os.getcwd(),"data", "Score files", "deu_wikipedia_2016_1M-words.txt")),
+         word_freq_sep=("\t", "\t"), word_freq_index_col=(0, 0), word_freq_col_names=(["word", "frequency"], ["word", "frequency"]),
+         word_freq_header=(None, None), word_freq_corpus_size=(1000000, 1000000),
+         w2v_model_path=(os.path.join(os.getcwd(), "data", "Score files", "120sdewac_sg300.vec"),
+                         os.path.join(os.getcwd(), "data", "Score files", "120sdewac_sg300.vec")),
+         connective_path=(os.path.join(os.getcwd(), "data", "Score files", "Connectives_en.csv"),
+                         os.path.join(os.getcwd(), "data", "Score files", "Connectives_de.csv")),
+         connective_separator=(",", ","), connective_identifier=("WORD", "WORD"),
+         connective_label=("Connective Type", "Connective Type"),
+         pos_connective_name=("Comparative Connectives Positive", "Comparative Connectives Positive"),
+         neg_connective_name=("Comparative Connectives Negative", "Comparative Connectives Negative"),
          run_Gutenberg=False, selected_Gutenberg=False, run_extra_books=False, run_new_documents=True):
     print(datetime.datetime.now(), "program loaded")
     
-    
-
-
-
     
     print(datetime.datetime.now(), "Load Tree Tagger")
     # <editor-fold desc="Load Tree Tagger modules">
@@ -32,23 +44,40 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
     # </editor-fold>
 
 
-    print(datetime.datetime.now(), "Load Concretness Scores")
-    # <editor-fold desc="Load Concretness Scores">
-    ## Concretness english:
-    list_dict_conc = []
-    for path, word, label, sep in zip(concretness_score_paths, concretness_score_word, concretness_score_label, concretness_score_separator):
-        df_conc = load_score_file(path, sep=sep)
-        list_dict_conc.append(list_to_dict(df=df_conc, column=label, identifier=word))
+    print(datetime.datetime.now(), "Load Affinity Scores")
+    # <editor-fold desc="Load Affinity Scores">
+    affinity_dicts = []
+    concreteness_score_dicts = []
+
+    for path, sep, identifier, label_list, conc_label in zip(affinity_score_paths, affinity_score_separator, affinity_identifier, affinity_score_label, concreteness_score_label):
+        concreteness_score_dicts.append(list_to_dict(path_to_file=path, sep=sep, column=conc_label, identifier=identifier))
+        affinity_dicts.append(list_to_dict(path_to_file=path, sep=sep, column=label_list, identifier=identifier))
     # </editor-fold>
+
+
+    print(datetime.datetime.now(), "Load Word Frequencies")
+    # <editor-fold desc="Load Word Frequencies">
+    word_freq_dicts = [load_word_freq(path=path, sep=sep, header=header, index_col=index_col, names=names) for
+                       path, sep, header, index_col, names in zip(word_freq_path, word_freq_sep, word_freq_header,
+                                                                  word_freq_index_col, word_freq_col_names)]
+    # </editor-fold>
+
+    print(datetime.datetime.now(), "Load Connectives")
+    # <editor-fold desc="Load Word Frequencies">
+    connectives_dicts = [list_to_dict(path_to_file=path, sep=sep, column=label, identifier=ident) for
+                       path, sep, ident, label in zip(connective_path, connective_separator, connective_identifier, connective_label)]
+    # </editor-fold>
+
 
     print(datetime.datetime.now(), "Load V2W model")
     # <editor-fold desc="Load W2V model">
-    # W2V Model
-    ### Small Model
-    # w2v_model = load_w2v("data\\250kGLEC_sg500.vec")
-    ## Larger Model
-    # w2v_model = load_w2v("data\\120sdewac_sg300.vec")
-    w2v_model = None
+    if len(w2v_model_path) == 0:
+        w2v_model = [None, None]
+    elif len(set(w2v_model_path)) == len(w2v_model_path):
+        w2v_model = load_w2v(w2v_model_path[0])
+        w2v_model = [w2v_model, w2v_model]
+    else:
+        w2v_model = [load_w2v(path) for path in w2v_model_path]
     # </editor-fold>
 
     
@@ -79,13 +108,19 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
                 continue
     
             flipper = False
-            for l, conc_dict, t_tagger in zip(languages, list_dict_conc, tree_tagger):
+            for t_tagger, l, aff_dict, aff_label, conc_dict, freq_dict, freq_corpus_size, conn_dict, neg_conn_name, pos_conn_name in zip(tree_tagger, languages,
+                                                                   affinity_dicts, affinity_score_label,
+                                                                   concreteness_score_dicts,
+                                                                   word_freq_dicts, word_freq_corpus_size,
+                                                                   connectives_dicts, neg_connective_name, pos_connective_name):
                 if new_doc_languages == l:
                     flipper = True
-                    temp_list = pipeline(text=text, language=new_doc_languages, w2v_model=w2v_model, list_dict_conc=conc_dict,
-                                         tagger=t_tagger)
+                    temp_list = pipeline(text=text, language=new_doc_languages, w2v_model=w2v_model, tagger=t_tagger,
+                                         affinity_dict=aff_dict, affinity_score_label=aff_label, concreteness_dict=conc_dict,
+                                         word_freq_dict=freq_dict, word_freq_corpus_size=freq_corpus_size,
+                                         connective_dict=conn_dict, neg_connective_name=neg_conn_name, pos_connective_name=pos_conn_name)
             if not flipper:
-                print("language not yet implemented", j)
+                print("language not yet implemented", l)
                 continue
             meta_list = [None, None, i, None, new_doc_languages]
             meta_list.extend(temp_list)

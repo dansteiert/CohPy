@@ -35,18 +35,36 @@ punctuation_fin_accept_tags_start_with = []
 punctuation_fin_exclude_tags = []
 punctuation_fin_exclude_tags_start_with = []
 ## Conjugations:
-conjugations_accept_tags = []
-conjugations_accept_tags_start_with = ["K"]
-conjugations_exclude_tags = []
-conjugations_exclude_tags_start_with = []
+conjunctions_accept_tags = []
+conjunctions_accept_tags_start_with = ["K"]
+conjunctions_exclude_tags = []
+conjunctions_exclude_tags_start_with = []
 ## Logicals:
 logical_accept_tags = ["KON", "KOKOM"]
 logical_accept_tags_start_with = []
 logical_exclude_tags = []
 logical_exclude_tags_start_with = []
+# ## Word_count:
+# count_accept_tags = ["AD"]
+# count_accept_tags_start_with = []
+# count_exclude_tags = []
+# count_exclude_tags_start_with = ["A", "C", "I", "K", "P", "T", "$"]
 ## Word_count:
-count_accept_tags = ["AD"]
+count_accept_tags = []
 count_accept_tags_start_with = []
 count_exclude_tags = []
-count_exclude_tags_start_with = ["A", "C", "I", "K", "P", "T", "$"]
+count_exclude_tags_start_with = []
+
+## Functional:
+functional_accept_tags = []
+functional_accept_tags_start_with = ["P", "A", "K", "I", "V"]
+functional_exclude_tags = ["AD", "VV"]
+functional_exclude_tags_start_with = []
+## Content:
+content_accept_tags = []
+content_accept_tags_start_with = ["N", "V", "A"]
+content_exclude_tags = ["VA", "VM", "AP", "AR"]
+content_exclude_tags_start_with = []
+
+
 # </editor-fold>

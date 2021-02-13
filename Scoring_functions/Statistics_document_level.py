@@ -1,34 +1,72 @@
-from Helper.Helper_functions import search_tag_set, to_count_dict
+from Helper.Helper_functions import search_tag_set, to_count_dict, mean_of_list
 import numpy as np
 
 
-def word_frequency(document_lemma, document_tags, accept_tags=[], accept_tags_start_with=[], exclude_tags=[],
-                    exclude_tags_start_with=[]):
+
+
+def logical_incidence(aggregate, document_tags, accept_tags=[], accept_tags_start_with=["$"], exclude_tags=[],
+                      exclude_tags_start_with=[]):
     '''
-    Count unique words and their repetitions and calculate the ratio  Uniquewords by their repetitions.
-    The closer to 1 this ratio, the harder to read is the text. Infinity, means that no such value could be calculated.
-    :param document_lemma: list, list of Lemma
-    :param document_tags: list, list of POS-tags
+    Ref: Grasser2004 - Logical Operators
+
+    :param aggregate: list, list of elements associated to the POS-tags given
+    :param tags: list, list of POS-tags, associated to the aggregate list
     :param accept_tags: list, a set of POS-tag, needed for check_tags function
     :param accept_tags_start_with: list, a set of POS-tag, needed for check_tags function
     :param exclude_tags: list, a set of POS-tag, needed for check_tags function
     :param exclude_tags_start_with: list, a set of POS-tag, needed for check_tags function
-    :return: set(int, int, float), Unique word cound, Sum of repetitions, ratio of Uniquewords by their repetitions
+    :return:
     '''
-    tag_list = search_tag_set(aggregate=document_lemma, tags=document_tags, accept_tags=accept_tags,
+    tag_list = search_tag_set(aggregate=aggregate, tags=document_tags, accept_tags=accept_tags,
                               accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
                               exclude_tags_start_with=exclude_tags_start_with)
-    count_dict = to_count_dict(aggregate_list=tag_list)
-    repeated_terms = [v for k, v in count_dict.items() if v >= 1]
-    count_repeated_words = len(repeated_terms)
-    num_word_repetitions = sum(repeated_terms)
-    if num_word_repetitions > 0:
-        return (count_repeated_words, num_word_repetitions)
-    else:
-        return np.Infinity
+    count_dict = to_count_dict(tag_list)
+    normalizer = len(aggregate) / 1000
+    incidence_scores = [v for k, v in count_dict.items()]
+    incidence_scores.append(sum(incidence_scores))
+    incidence_scores = [i / normalizer for i in incidence_scores]
+    return mean_of_list(incidence_scores)
+
+
+def connective_incidence(lemma, connective_dict, name_positive_connective, name_negative_connective):
+    '''
+    Ref: Grasser2004 - Connectives
+    Ref: Crossley2016- Connectives
+    Calculate connective incidence scores
+    :param lemma: list, of lemma
+    :param connective_dict: dict, with words and their connective category
+    :param name_positive_connective: str, name of the positive connective group
+    :param name_negative_connective: str, name of the negative connective group
+    :return: set(float, float, float), mean incidence of -, incidence of negative-, incidence of positive connectives
+    '''
+    agg_list = []
+    for index, l in enumerate(lemma):
+        temp = []
+        for i in range(0, 3):
+            temp.append(connective_dict.get(" ".join(lemma[index: index + i]), None))
+        for i in reversed(temp):
+            if i is not None:
+                agg_list.append(i)
+                break
+    count_dict = to_count_dict(agg_list)
+    normalizer = len(lemma) / 1000
+    connective_count = [v / normalizer for k, v in count_dict.items()]
+    connective_names = [k for k, v in count_dict.items()]
+    neg_connective_count = [v for k, v in zip(connective_names, connective_count) if k == name_negative_connective]
+    pos_connective_count = [v for k, v in zip(connective_names, connective_count) if k == name_positive_connective]
+    
+    return (mean_of_list(connective_count), neg_connective_count, pos_connective_count)
+
 
 
 def Flescher_Reading_Ease(document_words, document_syllables, num_sentences):
+    '''
+    Ref: Grasser2004 - Readability Scores
+    :param document_words:
+    :param document_syllables:
+    :param num_sentences:
+    :return:
+    '''
     if len(document_words) < 200:
         return None
 
@@ -38,6 +76,14 @@ def Flescher_Reading_Ease(document_words, document_syllables, num_sentences):
 
 
 def Flescher_Kincaid_Grade_Level(document_words, document_syllables, num_sentences):
+    '''
+    Ref: Grasser2004 - Readability Scores
+
+    :param document_words:
+    :param document_syllables:
+    :param num_sentences:
+    :return:
+    '''
     if len(document_words) < 200:
         return None
 

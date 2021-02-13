@@ -1,8 +1,19 @@
 from Helper.Helper_functions import mean_of_list, search_tag_set
 from Helper.w2v_model import sentence_similarity
 
-def sentiment_shift(w2v_model, lemma_by_segment, tags_by_segment, accept_tags=[], accept_tags_start_with=[],
+def semantic_shift(w2v_model, lemma_by_segment, tags_by_segment, accept_tags=[], accept_tags_start_with=[],
                              exclude_tags=[], exclude_tags_start_with=[]):
+    '''
+    Ref: Crossley2019 - Semantic similarity features
+    :param w2v_model:
+    :param lemma_by_segment:
+    :param tags_by_segment:
+    :param accept_tags:
+    :param accept_tags_start_with:
+    :param exclude_tags:
+    :param exclude_tags_start_with:
+    :return:
+    '''
     if w2v_model is None:
         return 0, 0
     
@@ -50,6 +61,16 @@ def tag_overlap(sent_a_tags, sent_a_lemma, sent_b_tags, sent_b_lemma, accept_tag
 
 def tag_overlap(lemma_by_segment, tags_by_segment, accept_tags=[], accept_tags_start_with=[],
                    exclude_tags=[], exclude_tags_start_with=[]):
+    '''
+    Ref: Crossley 2016 - Lexical Overlap
+    :param lemma_by_segment:
+    :param tags_by_segment:
+    :param accept_tags:
+    :param accept_tags_start_with:
+    :param exclude_tags:
+    :param exclude_tags_start_with:
+    :return:
+    '''
     v = []
     for index_a, (l_a, t_a) in enumerate(zip(lemma_by_segment, tags_by_segment)):
         if index_a + 1 >= len(lemma_by_segment):
@@ -59,5 +80,36 @@ def tag_overlap(lemma_by_segment, tags_by_segment, accept_tags=[], accept_tags_s
                          accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
                          exclude_tags_start_with=exclude_tags_start_with))
     return mean_of_list(v)
+
+def affinity_shift(lemma_by_sent, affinity_dict, affinity_label):
+    '''
+    Calculate for the given Affinity scores, their absolute sentiment shift, for adjacent sentences
+    :param lemma_by_sent: list, a list of sentences, which are a list of lemma
+    :param affinity_dict: dictionary with words as identifier and a dict of affinity values as its value
+    :param affinity_label: list, of affinity value names
+    :return: list, float mean absolute pairwise affinity scores, for given affinity labels
+    '''
+    affinities = [[]] * len(affinity_label)
+    for lemma in lemma_by_sent:
+        temp_affinities = [[]] * len(affinity_label)
+        for l in lemma:
+            temp = affinity_dict.get(l, None)
+            if temp is not None:
+                for aff_index, aff_lab in enumerate(affinity_label):
+                    temp_aff_score = temp_affinities[aff_index]
+                    temp_aff_score.append(temp.get(aff_lab, None))
+                    temp_affinities[aff_index] = temp_aff_score
+        for aff_index, aff_lab in enumerate(affinity_label):
+            affinities[aff_index] = mean_of_list(temp_affinities[aff_index])
+    affinity_shift_score = []
+    for aff_values, aff_lab in zip(affinities, affinity_label):
+        aff_shift = []
+        for sent_index, aff_val in enumerate(aff_values):
+            if sent_index + 1 >= len(aff_values):
+                continue
+            aff_shift.append(abs(aff_val - aff_val[sent_index + 1]))
+        affinity_shift_score.append(mean_of_list(aff_shift))
+    return affinity_shift_score
+
 
 

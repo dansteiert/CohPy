@@ -173,30 +173,29 @@ def split_at_charset(text, sep=[".", ";", "!", "?", ":"]):
     return segmented
 
 
-def list_to_dict(df, identifier, column):
+def list_to_dict(path_to_file, sep, identifier, column):
     '''
     Convert a Pandas Dataframe into a dictionary, with an index column for the key, and a single column as value.
-    No duplications are expected.
+    Only Last duplication is kept!
     :param df: pandas DataFrame
     :param identifier: str, column name of the identifier
     :param column: str, column name of the value column
     :return: dict
     '''
-    list_dict = {}
-    for w, c in zip(df[identifier].tolist(), df[column].tolist()):
-        list_dict[w] = c
+    df = pd.read_csv(path_to_file, sep=sep)
+    if type(column) == list and len(column) > 1:
+        df_word = df[~df.duplicated(subset=[identifier], keep="last")]
+        df_word = df_word.set_index(identifier)
+        df_word = df_word[column]
+        list_dict = df_word.to_dict(orient="index")
+    else:
+        list_dict = {}
+        for ident, col in zip(df[identifier].tolist(), df[column].tolist()):
+            list_dict[ident] = col
     return list_dict
 
 
-def load_score_file(path_to_file, sep=","):
-    '''
-    Load a delimited file (tsv, csv, ...)
-    :param path_to_file: str, The path to the file
-    :param sep: str, the separator of the given file
-    :return: pandas DataFrame
-    '''
-    df = pd.read_csv(path_to_file, sep=sep)
-    return df
+
 
 
 def POS_tagger(tagger, document):
@@ -205,6 +204,8 @@ def POS_tagger(tagger, document):
     words = [i.split("\t")[0] for i in pos_tags if len(i.split("\t")) > 1]
     tags = [i.split("\t")[1] for i in pos_tags if len(i.split("\t")) > 1]
     lemmas = [i.split("\t")[-1] for i in pos_tags if len(i.split("\t")) > 1]
-
-
     return (words, tags, lemmas)
+
+def load_word_freq(path, sep="\t", header=None, index_col=0, names=["word", "frequency"]):
+    df = pd.read_csv(path, sep=sep, header=header, index_col=index_col, names=names, quoting=3)
+    return df
