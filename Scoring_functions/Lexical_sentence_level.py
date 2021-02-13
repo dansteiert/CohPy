@@ -111,14 +111,21 @@ def content_functional_ratio(document_tags, content_tags=[], content_tags_start_
     return len(tag_list_content)
 
 
-# TODO: Dividing by 1000 or something relative -> Look it up and include, if necessary
 def POS_frequency(document_tags, accept_tags=[], accept_tags_start_with=[], exclude_tags=[],
                   exclude_tags_start_with=["$"]):
-    # where is it used/implemented? - what type should be returned?
-    # How fine should the differentiation be done?
+    '''
+    Ref: Graesser2004??
+    :param document_tags:
+    :param accept_tags:
+    :param accept_tags_start_with:
+    :param exclude_tags:
+    :param exclude_tags_start_with:
+    :return:
+    '''
     tag_list = search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=accept_tags,
                               accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
                               exclude_tags_start_with=exclude_tags_start_with)
     count_dict = to_count_dict(tag_list)
-    tag_dict = {key: val / 1000 for (key, val) in count_dict.items()}
+    normalizer = len(document_tags)/1000
+    tag_dict = {key: val / normalizer for (key, val) in count_dict.items()}
     return tag_dict

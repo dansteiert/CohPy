@@ -17,21 +17,3 @@ def length_aggregator_list(aggregate, document_tags, accept_tags=[], accept_tags
                               accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
                               exclude_tags_start_with=exclude_tags_start_with)
     return len(tag_list)
-
-
-
-    
-    
-    
-
-
-
-# TODO: These are (1) clarifying
-# connectives, such as in other words and that is; (2) additive
-# connectives, such as also and moreover; (3) temporal
-# connectives, such as after, before, and when; and (4) causal
-# connectives, such as because, so, and consequently. On
-# another dimension, there is a contrast between positive
-# and negative connectives. For example, adversative additive
-# connectives (e.g., however, in contrast) and adversative
-# causal connectives (e.g., although) are negative.
