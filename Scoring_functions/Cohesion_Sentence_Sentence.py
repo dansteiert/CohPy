@@ -76,7 +76,7 @@ def tag_overlap(lemma_by_segment, tags_by_segment, accept_tags=[], accept_tags_s
     for index_a, (l_a, t_a) in enumerate(zip(lemma_by_segment, tags_by_segment)):
         if index_a + 1 >= len(lemma_by_segment):
             continue
-        v.append(tag_overlap(sent_a_lemma=l_a, sent_a_tags=t_a, sent_b_lemma=lemma_by_segment[index_a + 1],
+        v.append(tag_overlap_by_sent(sent_a_lemma=l_a, sent_a_tags=t_a, sent_b_lemma=lemma_by_segment[index_a + 1],
                          sent_b_tags=tags_by_segment[index_a + 1], accept_tags=accept_tags,
                          accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
                          exclude_tags_start_with=exclude_tags_start_with))
