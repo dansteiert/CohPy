@@ -1,9 +1,9 @@
-from Helper.Helper_functions import mean_of_list
+from Helper.Helper_functions import mean_of_list, to_count_dict
 import numpy as np
 
 def word_length(document_word):
     '''
-
+    Ref: Pitler08 - Baseline measures
     :param document: List of tokenized entries
     :return: length for each entry in the list
     '''
@@ -35,6 +35,7 @@ def syllable_count(document_words):
 def word_frequency(lemma, word_freq_dict, word_dict_corpus_size=1000000):
     '''
     Ref: CohMetrix - Grasser2004 - Word Frequency
+    Ref: Pitler08 - Vocabulary -> log likelihood of an article: sum C(w) * log(P(w|M)); C(w) count of word; P(w|M) probability of w occuring in M; M is the background Corpus
     https://wortschatz.uni-leipzig.de/en/download Word Freq origin
     Calculates the mean word frequency, by sentences
     :param lemma_by_sent: list, list of list of lemma
@@ -42,7 +43,11 @@ def word_frequency(lemma, word_freq_dict, word_dict_corpus_size=1000000):
     :return: int
     '''
     min_freq = 1/word_dict_corpus_size
-    word_freq = [word_freq_dict.get(l, min_freq) for l in lemma]
-    word_freq = [np.log10(i/word_dict_corpus_size) for i in word_freq]
-    return word_freq
+    text_size = len(lemma)
+    count_dict = to_count_dict(lemma)
+    corpus_freq = np.array([word_freq_dict.get(k, min_freq)/word_dict_corpus_size for k, v in count_dict.items()])
+    text_freq = np.array([v/ text_size for k, v in count_dict.items()])
+    corr_matrix = np.corrcoef(x=corpus_freq, y=text_freq)
+    word_freq = [np.log10((v * (word_freq_dict.get(k, min_freq)/word_dict_corpus_size))) for k, v in count_dict.items()]
+    return mean_of_list(word_freq), corr_matrix[0, 1]
         

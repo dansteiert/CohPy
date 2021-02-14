@@ -9,6 +9,11 @@ pronouns_accept_tags = []
 pronouns_accept_tags_start_with = ["P"]
 pronouns_exclude_tags = ["PTK"]
 pronouns_exclude_tags_start_with = []
+##Noun Pronoun:
+noun_pronouns_accept_tags = []
+noun_pronouns_accept_tags_start_with = ["P", "N"]
+noun_pronouns_exclude_tags = ["PTK"]
+noun_pronouns_exclude_tags_start_with = []
 ## Verbs:
 verbs_accept_tags = []
 verbs_accept_tags_start_with = ["V"]
@@ -65,6 +70,10 @@ content_accept_tags = []
 content_accept_tags_start_with = ["N", "V", "A"]
 content_exclude_tags = ["VA", "VM", "AP", "AR"]
 content_exclude_tags_start_with = []
-
+## definite Articles
+article_accept_tags = ["ART"]
+article_accept_tags_start_with = []
+article_exclude_tags = []
+article_exclude_tags_start_with = []
 
 # </editor-fold>

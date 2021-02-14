@@ -22,13 +22,12 @@ def logical_incidence(aggregate, document_tags, accept_tags=[], accept_tags_star
                               exclude_tags_start_with=exclude_tags_start_with)
     count_dict = to_count_dict(tag_list)
     normalizer = len(aggregate) / 1000
-    incidence_scores = [v for k, v in count_dict.items()]
-    incidence_scores.append(sum(incidence_scores))
-    incidence_scores = [i / normalizer for i in incidence_scores]
-    return mean_of_list(incidence_scores)
+    count_dict["all"] = (sum([v for k, v in count_dict.items()]))
+    incidence_scores = {"incidence logical " + str(k): v / normalizer for k, v in count_dict.items()}
+    return incidence_scores
 
 
-def connective_incidence(lemma, connective_dict, name_positive_connective, name_negative_connective):
+def connective_incidence(lemma, connective_dict):
     '''
     Ref: Grasser2004 - Connectives
     Ref: Crossley2016- Connectives
@@ -50,12 +49,9 @@ def connective_incidence(lemma, connective_dict, name_positive_connective, name_
                 break
     count_dict = to_count_dict(agg_list)
     normalizer = len(lemma) / 1000
-    connective_count = [v / normalizer for k, v in count_dict.items()]
-    connective_names = [k for k, v in count_dict.items()]
-    neg_connective_count = [v for k, v in zip(connective_names, connective_count) if k == name_negative_connective]
-    pos_connective_count = [v for k, v in zip(connective_names, connective_count) if k == name_positive_connective]
+    connective_incidences = {"incidence connective " + k: v/normalizer for k,v in count_dict.items()}
     
-    return (mean_of_list(connective_count), neg_connective_count, pos_connective_count)
+    return connective_incidences
 
 
 

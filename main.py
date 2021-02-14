@@ -2,7 +2,7 @@ import treetaggerwrapper as tt
 import datetime
 import os
 import pandas as pd
-
+import csv
 ## Import Own Functions:
 from Helper.Helper_functions import load_score_file, list_to_dict, load_word_freq
 from Helper.w2v_model import load_w2v
@@ -30,9 +30,10 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
                          os.path.join(os.getcwd(), "data", "Score files", "Connectives_de.csv")),
          connective_separator=(",", ","), connective_identifier=("WORD", "WORD"),
          connective_label=("Connective Type", "Connective Type"),
-         pos_connective_name=("Comparative Connectives Positive", "Comparative Connectives Positive"),
-         neg_connective_name=("Comparative Connectives Negative", "Comparative Connectives Negative"),
-         run_Gutenberg=False, selected_Gutenberg=False, run_extra_books=False, run_new_documents=True):
+         run_Gutenberg=False, target_path_full_gutenberg=os.path.join(os.getcwd(), "data", "score_collection_full_gutenberg.tsv"),
+         selected_Gutenberg=False, target_path_selected_gutenberg=os.path.join(os.getcwd(), "data", "score_collection_selected_gutenberg.tsv"),
+         run_extra_books=False, target_path_extra_books=os.path.join(os.getcwd(), "data", "score_collection_extra_books.tsv"),
+         run_new_documents=True, target_path_new_documents=os.path.join(os.getcwd(), "data", "score_collection_new_documents.tsv")):
     print(datetime.datetime.now(), "program loaded")
     
     
@@ -82,19 +83,6 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
 
     
     if run_new_documents:
-        
-        # <editor-fold desc="Create non Gutenberg books File collection">
-        column_names = ["id", "gutenberg_id", "title", "author", "language", "mean_word_length", "mean_syllables",
-                        "count_logicals", "count_conjugations", "mean_sentence_length", "mean_punctuations",
-                        "mean_lexical_diversity", "type_token_ratio_nouns", "type_token_ratio_verbs",
-                        "type_token_ratio_adverbs", "type_token_ratio_adjectives", "FRE", "FKGL", "count_repeated_words",
-                        "num_word_repetitions", "mean_concretness", "hitrate_conc", "nouns_overlap",
-                        "verbs_overlap", "adverbs_overlap", "adjectives_overlap", "sentiment_overlap", "sentiment_hitrate", "topic_overlap"]
-        with open(os.path.join(os.getcwd(), "data", "score_collection_new_documents.tsv"), "w") as file:
-            file.write("\t".join(column_names))
-            file.write("\n")
-        # </editor-fold>
-
         new_doc_path = os.path.join(os.getcwd(), "data", "new_documents")
         new_doc_languages = "en"
         for i in os.listdir(new_doc_path):
@@ -112,44 +100,37 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
                                                                    affinity_dicts, affinity_score_label,
                                                                    concreteness_score_dicts,
                                                                    word_freq_dicts, word_freq_corpus_size,
-                                                                   connectives_dicts, neg_connective_name, pos_connective_name):
+                                                                   connectives_dicts):
                 if new_doc_languages == l:
                     flipper = True
-                    temp_list = pipeline(text=text, language=new_doc_languages, w2v_model=w2v_model, tagger=t_tagger,
+                    temp_dict = pipeline(text=text, language=new_doc_languages, w2v_model=w2v_model, tagger=t_tagger,
                                          affinity_dict=aff_dict, affinity_score_label=aff_label, concreteness_dict=conc_dict,
                                          word_freq_dict=freq_dict, word_freq_corpus_size=freq_corpus_size,
-                                         connective_dict=conn_dict, neg_connective_name=neg_conn_name, pos_connective_name=pos_conn_name)
+                                         connective_dict=conn_dict)
             if not flipper:
                 print("language not yet implemented", l)
                 continue
-            meta_list = [None, None, i, None, new_doc_languages]
-            meta_list.extend(temp_list)
-            meta_list = [str(j) for j in meta_list]
-    
-            with open(os.path.join(os.getcwd(), "data", "score_collection_new_documents.tsv"), "a") as file:
-                file.write("\t".join(meta_list))
-                file.write("\n")
+            temp_dict = {**{"id": None, "Gutenberg_id": None, "Title": i, "Author": None, "Language": new_doc_languages}, **temp_dict}
+            if os.path.isfile(target_path_new_documents):
+                with open(os.path.join(os.getcwd(), "data", "score_collection_new_documents.tsv"), "a") as file:
+                    writer = csv.DictWriter(file, fieldnames=sorted([k for k, v in temp_dict.items()]), delimiter="\t")
+                    for data in temp_dict:
+                        writer.writerow(data)
+            else:
+                with open(os.path.join(os.getcwd(), "data", "score_collection_new_documents.tsv"), "w") as file:
+                    writer = csv.DictWriter(file, fieldnames=sorted([k for k, v in temp_dict.items()]), delimiter="\t")
+                    writer.writeheader()
+                    for data in temp_dict:
+                        writer.writerow(data)
+
         # </editor-fold>
         
         
 
-
+# TODO: new structure!!
     if run_extra_books:
         print(datetime.datetime.now(), "start loading non Gutenberg books")
-        # <editor-fold desc="Create non Gutenberg books File collection">
-        column_names = ["id", "gutenberg_id", "title", "author", "language", "mean_word_length", "mean_syllables",
-                        "count_logicals", "count_conjugations", "mean_sentence_length", "mean_punctuations",
-                        "mean_lexical_diversity", "type_token_ratio_nouns", "type_token_ratio_verbs",
-                        "type_token_ratio_adverbs", "type_token_ratio_adjectives", "FRE", "FKGL", "count_repeated_words",
-                        "num_word_repetitions", "mean_concretness", "hitrate_conc", "nouns_overlap",
-                        "verbs_overlap", "adverbs_overlap", "adjectives_overlap", "sentiment_overlap", "sentiment_hitrate", "topic_overlap"]
-        with open(os.path.join(os.getcwd(), "data", "score_collection_extra_books.tsv"), "w") as file:
-            file.write("\t".join(column_names))
-            file.write("\n")
-        # </editor-fold>
-        
-        
-        
+
         # <editor-fold desc="Readability calculations non - Gutenberg Books">
         for j in os.listdir(os.path.join(os.getcwd(), "data", "Extra_books")):
             for i in os.listdir(os.path.join(os.getcwd(), "data", "Extra_books", j)):
