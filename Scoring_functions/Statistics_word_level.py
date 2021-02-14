@@ -49,5 +49,5 @@ def word_frequency(lemma, word_freq_dict, word_dict_corpus_size=1000000):
     text_freq = np.array([v/ text_size for k, v in count_dict.items()])
     corr_matrix = np.corrcoef(x=corpus_freq, y=text_freq)
     word_freq = [np.log10((v * (word_freq_dict.get(k, min_freq)/word_dict_corpus_size))) for k, v in count_dict.items()]
-    return mean_of_list(word_freq), corr_matrix[0, 1]
+    return mean_of_list(word_freq), corr_matrix[0, 1], len(word_freq)/(text_size/1000)
         

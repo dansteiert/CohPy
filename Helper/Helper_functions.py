@@ -209,3 +209,21 @@ def POS_tagger(tagger, document):
 def load_word_freq(path, sep="\t", header=None, index_col=0, names=["word", "frequency"]):
     df = pd.read_csv(path, sep=sep, header=header, index_col=index_col, names=names, quoting=3)
     return df
+
+# TODO: Incorporate into Pipeline
+def sort_by_POS_tags(aggregator_by_sent=[], tags_by_sent=[], accept=[], accept_star_with=[], exclude=[], exclude_start_with=[], order_tagsets=[]):
+    doc_dict = {}
+    for agg_sentence, tag_sentence in zip(aggregator_by_sent, tags_by_sent):
+        sentence_dict = {}
+        for a, t in zip(agg_sentence, tag_sentence):
+            for at, atsw, et, etsw, tagset in zip(accept, accept_star_with, exclude, exclude_start_with, order_tagsets):
+                if check_tags(tag=t, accept_tags=at, accept_tags_start_with=atsw, exclude_tags=et, exclude_tags_start_with=etsw):
+                    temp_list = sentence_dict.get(tagset, [])
+                    temp_list.append(a)
+                    sentence_dict[tagset] = temp_list
+        for tagset in order_tagsets:
+            temp_list = doc_dict.get(tagset, [])
+            temp_list.append(sentence_dict.get(tagset, []))
+            doc_dict[tagset] = temp_list
+    return doc_dict
+                

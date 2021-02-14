@@ -6,6 +6,7 @@ def type_token_ratio(document_lemma, document_tags, accept_tags=[], accept_tags_
     '''
     Ref: Grasser2004 - Type:Token Ratio
     Ref: Crossley2016 - Type-token ratio
+    Ref Jacobs2018 - Study 2 - adds Logarithm
     Calculate the ratio # types/ sum of tokens. A type is a unique word, a token is the times a type occures
     :param document_lemma: list, of lemma
     :param document_tags:  list, of POS-tags
@@ -23,7 +24,7 @@ def type_token_ratio(document_lemma, document_tags, accept_tags=[], accept_tags_
     if len(count_dict) == 0:
         return 0
     else:
-        return len(count_dict) / sum(count_dict.values())
+        return np.log10(len(count_dict) / sum(count_dict.values()))
 
 
 # Todo: There are two kinds of lexical diversity implement both!!

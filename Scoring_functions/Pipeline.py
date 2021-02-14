@@ -82,10 +82,11 @@ def pipeline(text, language, w2v_model, tagger, affinity_dict, affinity_score_la
     mean_word_length = word_length(document_word=words)
     syllables_list = syllable_count(document_words=words)
     mean_syllable_count = mean_of_list(syllables_list)
-    log_word_freq, text_corpus_corr = word_frequency(lemma=lemma, word_freq_dict=word_freq_dict, word_dict_corpus_size=word_freq_corpus_size)
+    log_word_freq, text_corpus_corr, unique_word_incidence = word_frequency(lemma=lemma, word_freq_dict=word_freq_dict, word_dict_corpus_size=word_freq_corpus_size)
     
     result_dict = {**result_dict, **{"Mean word length": mean_word_length, "Mean syllable count": mean_syllable_count,
-                                     "log word frequency": log_word_freq, "Vocabulary correlation": text_corpus_corr}}
+                                     "log word frequency": log_word_freq, "Vocabulary correlation": text_corpus_corr,
+                                     "Unique word incidence": unique_word_incidence}}
     # </editor-fold>
     
     # <editor-fold desc="Lexical Word Level">
