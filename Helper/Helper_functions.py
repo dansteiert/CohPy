@@ -195,9 +195,6 @@ def list_to_dict(path_to_file, sep, identifier, column):
     return list_dict
 
 
-
-
-
 def POS_tagger(tagger, document):
     pos_tags = tagger.tag_text(document)
     # someelements are not taggeged!
@@ -206,24 +203,67 @@ def POS_tagger(tagger, document):
     lemmas = [i.split("\t")[-1] for i in pos_tags if len(i.split("\t")) > 1]
     return (words, tags, lemmas)
 
+
 def load_word_freq(path, sep="\t", header=None, index_col=0, names=["word", "frequency"]):
     df = pd.read_csv(path, sep=sep, header=header, index_col=index_col, names=names, quoting=3)
     return df
 
-# TODO: Incorporate into Pipeline
-def sort_by_POS_tags(aggregator_by_sent=[], tags_by_sent=[], accept=[], accept_star_with=[], exclude=[], exclude_start_with=[], order_tagsets=[]):
+
+def sort_by_POS_tags(aggregator_by_sent=[], tags_by_sent=[], accept=[], accept_star_with=[], exclude=[],
+                     exclude_start_with=[], order_tagsets=[],
+                     exclusive_accept=[], exclusive_accept_star_with=[], exclusive_exclude=[],
+                     exclusive_exclude_start_with=[], exclusive_order_tagsets=[]):
     doc_dict = {}
+    full_doc_dict = {}
     for agg_sentence, tag_sentence in zip(aggregator_by_sent, tags_by_sent):
         sentence_dict = {}
         for a, t in zip(agg_sentence, tag_sentence):
+            temp_dict = sentence_dict.get("all", {})
+            temp_dict[a] = temp_dict.get(a, 0) + 1
+            sentence_dict["all"] = temp_dict
+    
+            temp_dict = full_doc_dict.get("all", {})
+            temp_dict[a] = temp_dict.get(a, 0) + 1
+            full_doc_dict["all"] = temp_dict
             for at, atsw, et, etsw, tagset in zip(accept, accept_star_with, exclude, exclude_start_with, order_tagsets):
-                if check_tags(tag=t, accept_tags=at, accept_tags_start_with=atsw, exclude_tags=et, exclude_tags_start_with=etsw):
-                    temp_list = sentence_dict.get(tagset, [])
-                    temp_list.append(a)
-                    sentence_dict[tagset] = temp_list
+                if check_tags(tag=t, accept_tags=at, accept_tags_start_with=atsw, exclude_tags=et,
+                              exclude_tags_start_with=etsw):
+                    temp_dict = sentence_dict.get(tagset, {})
+                    temp_dict[a]= temp_dict.get(a, 0) + 1
+                    sentence_dict[tagset] = temp_dict
+
+                    temp_dict = full_doc_dict.get(tagset, {})
+                    temp_dict[a]= temp_dict.get(a, 0) + 1
+                    full_doc_dict[tagset] = temp_dict
+                    
+            for at, atsw, et, etsw, tagset in zip(exclusive_accept, exclusive_accept_star_with, exclusive_exclude, exclusive_exclude_start_with,
+                                                  exclusive_order_tagsets):
+                if check_tags(tag=t, accept_tags=at, accept_tags_start_with=atsw, exclude_tags=et,
+                              exclude_tags_start_with=etsw):
+                    temp_dict = sentence_dict.get(tagset, {})
+                    temp_dict[a]= temp_dict.get(a, 0) + 1
+                    sentence_dict[tagset] = temp_dict
+
+                    temp_dict = full_doc_dict.get(tagset, {})
+                    temp_dict[a]= temp_dict.get(a, 0) + 1
+                    full_doc_dict[tagset] = temp_dict
+                    break
         for tagset in order_tagsets:
             temp_list = doc_dict.get(tagset, [])
-            temp_list.append(sentence_dict.get(tagset, []))
+            temp_list.append(sentence_dict.get(tagset, {}))
             doc_dict[tagset] = temp_list
-    return doc_dict
-                
+    return doc_dict, full_doc_dict
+
+
+def word_frequencies(lemma_by_sent):
+    freq_by_sent = []
+    doc_freq = {}
+    for sent in lemma_by_sent:
+        sent_dict = {}
+        for lemma in sent:
+            sent_dict[lemma] = sent_dict.get(lemma, 0) + 1
+            doc_freq[lemma] = doc_freq.get(lemma, 0) + 1
+        freq_by_sent.append(sent_dict)
+    return freq_by_sent, doc_freq
+    
+    

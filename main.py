@@ -4,7 +4,7 @@ import os
 import pandas as pd
 import csv
 ## Import Own Functions:
-from Helper.Helper_functions import load_score_file, list_to_dict, load_word_freq
+from Helper.Helper_functions import list_to_dict, load_word_freq
 from Helper.w2v_model import load_w2v
 from Scoring_functions.Pipeline import pipeline
 from Helper.Load_books import load_gutenberg, download_files
@@ -47,12 +47,12 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
 
     print(datetime.datetime.now(), "Load Affinity Scores")
     # <editor-fold desc="Load Affinity Scores">
-    affinity_dicts = []
-    concreteness_score_dicts = []
 
-    for path, sep, identifier, label_list, conc_label in zip(affinity_score_paths, affinity_score_separator, affinity_identifier, affinity_score_label, concreteness_score_label):
-        concreteness_score_dicts.append(list_to_dict(path_to_file=path, sep=sep, column=conc_label, identifier=identifier))
-        affinity_dicts.append(list_to_dict(path_to_file=path, sep=sep, column=label_list, identifier=identifier))
+    aff_conc_label =[[*affinity_score_label[0], concreteness_score_label[0]],
+                     [*affinity_score_label[1], concreteness_score_label[1]]]
+    affinity_dicts = [list_to_dict(path_to_file=path, sep=sep, column=label_list, identifier=identifier) for
+                      path, sep, identifier, label_list in zip(affinity_score_paths, affinity_score_separator,
+                                                               affinity_identifier, aff_conc_label)]
     # </editor-fold>
 
 
@@ -98,13 +98,13 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
             flipper = False
             for t_tagger, l, aff_dict, aff_label, conc_dict, freq_dict, freq_corpus_size, conn_dict, neg_conn_name, pos_conn_name in zip(tree_tagger, languages,
                                                                    affinity_dicts, affinity_score_label,
-                                                                   concreteness_score_dicts,
                                                                    word_freq_dicts, word_freq_corpus_size,
                                                                    connectives_dicts):
                 if new_doc_languages == l:
                     flipper = True
                     temp_dict = pipeline(text=text, language=new_doc_languages, w2v_model=w2v_model, tagger=t_tagger,
-                                         affinity_dict=aff_dict, affinity_score_label=aff_label, concreteness_dict=conc_dict,
+                                         affinity_dict=aff_dict, affinity_score_label=aff_label,
+                                         concreteness_label=concreteness_score_label,
                                          word_freq_dict=freq_dict, word_freq_corpus_size=freq_corpus_size,
                                          connective_dict=conn_dict)
             if not flipper:
@@ -128,176 +128,176 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
         
 
 # TODO: new structure!!
-    if run_extra_books:
-        print(datetime.datetime.now(), "start loading non Gutenberg books")
-
-        # <editor-fold desc="Readability calculations non - Gutenberg Books">
-        for j in os.listdir(os.path.join(os.getcwd(), "data", "Extra_books")):
-            for i in os.listdir(os.path.join(os.getcwd(), "data", "Extra_books", j)):
-                try:
-                    with open(os.path.join(os.getcwd(), "data", "Extra_books",j, i), "r", encoding="utf-8", errors="replace") as txt:
-                        text = txt.readlines()
-                        text = "".join(text)
-                except:
-                    print(i, "exception")
-                    continue
-    
-                flipper = False
-                for l, conc_dict, t_tagger in zip(languages, list_dict_conc, tree_tagger):
-                    if j== l:
-                        flipper = True
-                        temp_list = pipeline(text=text, language=j, w2v_model=w2v_model, list_dict_conc=conc_dict, tagger=t_tagger)
-                if not flipper:
-                    print("language not yet implemented", j)
-                    continue
-                meta_list = [None, None, i, None, j]
-                meta_list.extend(temp_list)
-                meta_list = [str(j) for j in meta_list]
-                
-                with open(os.path.join(os.getcwd(), "data", "score_collection_extra_books.tsv"), "a") as file:
-                    file.write("\t".join(meta_list))
-                    file.write("\n")
-        # </editor-fold>
-
-    if run_Gutenberg:
-        if not os.path.isfile(Gutenberg_path):
-            print("Enter Path to metafile for Gutenberg Library - use gutenburg python package for retrieving")
-    
-        print(datetime.datetime.now(), "Load Gutenberg Meta data")
-        # <editor-fold desc="Load Gutenberg corpus">
-        gutenberg_meta_data = load_gutenberg(Gutenberg_path)
-        if not os.path.isfile(
-                os.path.join(Gutenberg_path_for_download, "%s.txt" % gutenberg_meta_data["books"][-1]["id"])):
-            print(datetime.datetime.now(), "Download Gutenberg data - Non German IP needed!")
-            download_files(data=gutenberg_meta_data, path_for_download=Gutenberg_path_for_download)
-        gutenberg_books = gutenberg_meta_data["books"]
-        # </editor-fold>
-        
-        
-        # <editor-fold desc="Check for Gutenberg Books if a result collection exists">
-        if not selected_Gutenberg:
-            if os.path.isfile(os.path.join(os.getcwd(), "data", "score_collection.tsv")):
-                df = pd.read_csv(os.path.join(os.getcwd(), "data", "score_collection.tsv"), sep="\t")
-                max_index = df["id"].max() + 1
-                if max_index == max_index:
-                    gutenberg_books = gutenberg_books[max_index:]
-                    print(datetime.datetime.now(), max_index, "entries skipped")
-            else:
-                column_names = ["id", "gutenberg_id", "title", "author", "language", "mean_word_length", "mean_syllables",
-                                "count_logicals", "count_conjugations", "mean_sentence_length", "mean_punctuations",
-                                "mean_lexical_diversity", "type_token_ratio_nouns", "type_token_ratio_verbs",
-                                "type_token_ratio_adverbs", "type_token_ratio_adjectives", "FRE", "FKGL",
-                                "count_repeated_words",
-                                "num_word_repetitions", "mean_concretness", "hitrate_conc", "nouns_overlap",
-                                "verbs_overlap", "adverbs_overlap", "adjectives_overlap", "sentiment_overlap",
-                                "sentiment_hitrate", "topic_overlap"]
-                with open(os.path.join(os.getcwd(), "data", "score_collection.tsv"), "w") as file:
-                    file.write("\t".join(column_names))
-                    file.write("\n")
-                max_index = 0
-        # </editor-fold>
-        
-        
-        if selected_Gutenberg:
-            from Helper.Gutenberg_IDs import ID_collection
-            ID_collection = sorted(list(set(ID_collection)))
-            # column_names = ["id", "gutenberg_id", "title", "author", "language", "mean_word_length", "mean_syllables",
-            #                 "count_logicals", "count_conjugations", "mean_sentence_length", "mean_punctuations",
-            #                 "mean_lexical_diversity", "type_token_ratio_nouns", "type_token_ratio_verbs",
-            #                 "type_token_ratio_adverbs", "type_token_ratio_adjectives", "FRE", "FKGL",
-            #                 "count_repeated_words",
-            #                 "num_word_repetitions", "mean_concretness", "hitrate_conc", "nouns_overlap",
-            #                 "verbs_overlap", "adverbs_overlap", "adjectives_overlap", "sentiment_overlap",
-            #                 "sentiment_hitrate", "topic_overlap"]
-            # with open(os.path.join(os.getcwd(), "data", "score_collection_selected_ids.tsv"), "w") as file:
-            #     file.write("\t".join(column_names))
-            #     file.write("\n")
-            current_pointer = 0
-        
-        print(datetime.datetime.now(), "start loading books (5% steps):")
-        # <editor-fold desc="Readability calculation Gutenberg Books">
-        size_gutenberg = len(gutenberg_books)
-    
-        
-        for index, i in enumerate(gutenberg_books):
-            if selected_Gutenberg:
-                if i["id"] != ID_collection[current_pointer]:
-                    continue
-                else:
-                    current_pointer += 1
-            print(i["id"], "load_book")
-            # <editor-fold desc="Get Metadata">
-            if index % size_gutenberg == 0 and index !=0:
-                print("#", end="")
-            language = i["languages"][0]
-            # Chose files for Concretness and the w2v model
-            if language not in languages:
-                print("language not yet implemented", language)
-                continue
-            # </editor-fold>
-            
-            
-            # <editor-fold desc="Load Texts">
-            try:
-                if os.stat(os.path.join(Gutenberg_path_for_download, "%s.txt" % i["id"])).st_size >=2500000:
-                    print("file too large", i["id"])
-                    continue
-                with open(os.path.join(Gutenberg_path_for_download, "%s.txt" % i["id"]), "r", errors="replace") as txt:
-                    text = txt.readlines()
-                    text = "".join(text)
-            except:
-                print("file cound not be loaded", i["id"])
-                continue
-            # </editor-fold>
-    
-    
-            # <editor-fold desc="Run through Pipeline">
-            flipper = False
-            for l, conc_dict, t_tagger in zip(languages, list_dict_conc, tree_tagger):
-                if language == l:
-                    flipper = True
-                    temp_list = pipeline(text=text, language=language, w2v_model=w2v_model, list_dict_conc=conc_dict,
-                                         tagger=t_tagger)
-            if not flipper:
-                print("language not yet implemented", language)
-                continue
-            # </editor-fold>
-    
-    
-            # <editor-fold desc="Write Results to File">
-            try:
-                title = i["title"]
-                title = title.replace("\r", " ")
-                title = title.replace("\n", " ")
-                title = title
-            except:
-                title = None
-            try:
-                author = i["authors"][0]["name"]
-            except:
-                author = None
-            try:
-                if selected_Gutenberg:
-                    meta_list = [index, i["id"], title, author, language]
-                else:
-                    meta_list = [index + max_index, i["id"], title, author, language]
-            except:
-                print("problem with metadata")
-                continue
-                
-            meta_list.extend(temp_list)
-            meta_list = [str(j) for j in meta_list]
-            if selected_Gutenberg:
-                with open(os.path.join(os.getcwd(), "data", "score_collection_selected_ids.tsv"), "a") as file:
-                    file.write("\t".join(meta_list))
-                    file.write("\n")
-            else:
-                with open(os.path.join(os.getcwd(), "data", "score_collection.tsv"), "a") as file:
-                    file.write("\t".join(meta_list))
-                    file.write("\n")
-            # </editor-fold>
-        # </editor-fold>
-        
+#     if run_extra_books:
+#         print(datetime.datetime.now(), "start loading non Gutenberg books")
+#
+#         # <editor-fold desc="Readability calculations non - Gutenberg Books">
+#         for j in os.listdir(os.path.join(os.getcwd(), "data", "Extra_books")):
+#             for i in os.listdir(os.path.join(os.getcwd(), "data", "Extra_books", j)):
+#                 try:
+#                     with open(os.path.join(os.getcwd(), "data", "Extra_books",j, i), "r", encoding="utf-8", errors="replace") as txt:
+#                         text = txt.readlines()
+#                         text = "".join(text)
+#                 except:
+#                     print(i, "exception")
+#                     continue
+#
+#                 flipper = False
+#                 for l, conc_dict, t_tagger in zip(languages, list_dict_conc, tree_tagger):
+#                     if j== l:
+#                         flipper = True
+#                         temp_list = pipeline(text=text, language=j, w2v_model=w2v_model, list_dict_conc=conc_dict, tagger=t_tagger)
+#                 if not flipper:
+#                     print("language not yet implemented", j)
+#                     continue
+#                 meta_list = [None, None, i, None, j]
+#                 meta_list.extend(temp_list)
+#                 meta_list = [str(j) for j in meta_list]
+#
+#                 with open(os.path.join(os.getcwd(), "data", "score_collection_extra_books.tsv"), "a") as file:
+#                     file.write("\t".join(meta_list))
+#                     file.write("\n")
+#         # </editor-fold>
+#
+#     if run_Gutenberg:
+#         if not os.path.isfile(Gutenberg_path):
+#             print("Enter Path to metafile for Gutenberg Library - use gutenburg python package for retrieving")
+#
+#         print(datetime.datetime.now(), "Load Gutenberg Meta data")
+#         # <editor-fold desc="Load Gutenberg corpus">
+#         gutenberg_meta_data = load_gutenberg(Gutenberg_path)
+#         if not os.path.isfile(
+#                 os.path.join(Gutenberg_path_for_download, "%s.txt" % gutenberg_meta_data["books"][-1]["id"])):
+#             print(datetime.datetime.now(), "Download Gutenberg data - Non German IP needed!")
+#             download_files(data=gutenberg_meta_data, path_for_download=Gutenberg_path_for_download)
+#         gutenberg_books = gutenberg_meta_data["books"]
+#         # </editor-fold>
+#
+#
+#         # <editor-fold desc="Check for Gutenberg Books if a result collection exists">
+#         if not selected_Gutenberg:
+#             if os.path.isfile(os.path.join(os.getcwd(), "data", "score_collection.tsv")):
+#                 df = pd.read_csv(os.path.join(os.getcwd(), "data", "score_collection.tsv"), sep="\t")
+#                 max_index = df["id"].max() + 1
+#                 if max_index == max_index:
+#                     gutenberg_books = gutenberg_books[max_index:]
+#                     print(datetime.datetime.now(), max_index, "entries skipped")
+#             else:
+#                 column_names = ["id", "gutenberg_id", "title", "author", "language", "mean_word_length", "mean_syllables",
+#                                 "count_logicals", "count_conjugations", "mean_sentence_length", "mean_punctuations",
+#                                 "mean_lexical_diversity", "type_token_ratio_nouns", "type_token_ratio_verbs",
+#                                 "type_token_ratio_adverbs", "type_token_ratio_adjectives", "FRE", "FKGL",
+#                                 "count_repeated_words",
+#                                 "num_word_repetitions", "mean_concretness", "hitrate_conc", "nouns_overlap",
+#                                 "verbs_overlap", "adverbs_overlap", "adjectives_overlap", "sentiment_overlap",
+#                                 "sentiment_hitrate", "topic_overlap"]
+#                 with open(os.path.join(os.getcwd(), "data", "score_collection.tsv"), "w") as file:
+#                     file.write("\t".join(column_names))
+#                     file.write("\n")
+#                 max_index = 0
+#         # </editor-fold>
+#
+#
+#         if selected_Gutenberg:
+#             from Helper.Gutenberg_IDs import ID_collection
+#             ID_collection = sorted(list(set(ID_collection)))
+#             # column_names = ["id", "gutenberg_id", "title", "author", "language", "mean_word_length", "mean_syllables",
+#             #                 "count_logicals", "count_conjugations", "mean_sentence_length", "mean_punctuations",
+#             #                 "mean_lexical_diversity", "type_token_ratio_nouns", "type_token_ratio_verbs",
+#             #                 "type_token_ratio_adverbs", "type_token_ratio_adjectives", "FRE", "FKGL",
+#             #                 "count_repeated_words",
+#             #                 "num_word_repetitions", "mean_concretness", "hitrate_conc", "nouns_overlap",
+#             #                 "verbs_overlap", "adverbs_overlap", "adjectives_overlap", "sentiment_overlap",
+#             #                 "sentiment_hitrate", "topic_overlap"]
+#             # with open(os.path.join(os.getcwd(), "data", "score_collection_selected_ids.tsv"), "w") as file:
+#             #     file.write("\t".join(column_names))
+#             #     file.write("\n")
+#             current_pointer = 0
+#
+#         print(datetime.datetime.now(), "start loading books (5% steps):")
+#         # <editor-fold desc="Readability calculation Gutenberg Books">
+#         size_gutenberg = len(gutenberg_books)
+#
+#
+#         for index, i in enumerate(gutenberg_books):
+#             if selected_Gutenberg:
+#                 if i["id"] != ID_collection[current_pointer]:
+#                     continue
+#                 else:
+#                     current_pointer += 1
+#             print(i["id"], "load_book")
+#             # <editor-fold desc="Get Metadata">
+#             if index % size_gutenberg == 0 and index !=0:
+#                 print("#", end="")
+#             language = i["languages"][0]
+#             # Chose files for Concretness and the w2v model
+#             if language not in languages:
+#                 print("language not yet implemented", language)
+#                 continue
+#             # </editor-fold>
+#
+#
+#             # <editor-fold desc="Load Texts">
+#             try:
+#                 if os.stat(os.path.join(Gutenberg_path_for_download, "%s.txt" % i["id"])).st_size >=2500000:
+#                     print("file too large", i["id"])
+#                     continue
+#                 with open(os.path.join(Gutenberg_path_for_download, "%s.txt" % i["id"]), "r", errors="replace") as txt:
+#                     text = txt.readlines()
+#                     text = "".join(text)
+#             except:
+#                 print("file cound not be loaded", i["id"])
+#                 continue
+#             # </editor-fold>
+#
+#
+#             # <editor-fold desc="Run through Pipeline">
+#             flipper = False
+#             for l, conc_dict, t_tagger in zip(languages, list_dict_conc, tree_tagger):
+#                 if language == l:
+#                     flipper = True
+#                     temp_list = pipeline(text=text, language=language, w2v_model=w2v_model, list_dict_conc=conc_dict,
+#                                          tagger=t_tagger)
+#             if not flipper:
+#                 print("language not yet implemented", language)
+#                 continue
+#             # </editor-fold>
+#
+#
+#             # <editor-fold desc="Write Results to File">
+#             try:
+#                 title = i["title"]
+#                 title = title.replace("\r", " ")
+#                 title = title.replace("\n", " ")
+#                 title = title
+#             except:
+#                 title = None
+#             try:
+#                 author = i["authors"][0]["name"]
+#             except:
+#                 author = None
+#             try:
+#                 if selected_Gutenberg:
+#                     meta_list = [index, i["id"], title, author, language]
+#                 else:
+#                     meta_list = [index + max_index, i["id"], title, author, language]
+#             except:
+#                 print("problem with metadata")
+#                 continue
+#
+#             meta_list.extend(temp_list)
+#             meta_list = [str(j) for j in meta_list]
+#             if selected_Gutenberg:
+#                 with open(os.path.join(os.getcwd(), "data", "score_collection_selected_ids.tsv"), "a") as file:
+#                     file.write("\t".join(meta_list))
+#                     file.write("\n")
+#             else:
+#                 with open(os.path.join(os.getcwd(), "data", "score_collection.tsv"), "a") as file:
+#                     file.write("\t".join(meta_list))
+#                     file.write("\n")
+#             # </editor-fold>
+#         # </editor-fold>
+#
             
 
 

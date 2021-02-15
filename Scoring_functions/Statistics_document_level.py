@@ -4,8 +4,7 @@ import numpy as np
 
 
 
-def logical_incidence(aggregate, document_tags, accept_tags=[], accept_tags_start_with=["$"], exclude_tags=[],
-                      exclude_tags_start_with=[]):
+def logical_incidence(tagsets_by_doc, tagset_name, doc_words):
     '''
     Ref: Grasser2004 - Logical Operators
 
@@ -17,13 +16,11 @@ def logical_incidence(aggregate, document_tags, accept_tags=[], accept_tags_star
     :param exclude_tags_start_with: list, a set of POS-tag, needed for check_tags function
     :return:
     '''
-    tag_list = search_tag_set(aggregate=aggregate, tags=document_tags, accept_tags=accept_tags,
-                              accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
-                              exclude_tags_start_with=exclude_tags_start_with)
-    count_dict = to_count_dict(tag_list)
-    normalizer = len(aggregate) / 1000
-    count_dict["all"] = (sum([v for k, v in count_dict.items()]))
-    incidence_scores = {"incidence logical " + str(k): v / normalizer for k, v in count_dict.items()}
+    tagset = tagsets_by_doc.get(tagset_name, {})
+    
+    normalizer = doc_words / 1000
+    tagset["all"] = sum(tagset.values())
+    incidence_scores = {"incidence logical " + str(k): v / normalizer for k, v in tagset.items()}
     return incidence_scores
 
 
@@ -52,6 +49,20 @@ def connective_incidence(lemma, connective_dict):
     connective_incidences = {"incidence connective " + k: v/normalizer for k,v in count_dict.items()}
     
     return connective_incidences
+
+
+def unique_lemma(tagsets_by_doc, tagset_name, document_sentences):
+    '''
+    Ref: Crossley2016 - Givenness
+    :param tagset_by_doc:
+    :param tagset_name:
+    :param document_sentences:
+    :return:
+    '''
+    tagset = tagsets_by_doc.get(tagset_name, {})
+    list_unique = [True for v in tagset.values() if v == 1]
+    return len(list_unique)/document_sentences
+    
 
 
 

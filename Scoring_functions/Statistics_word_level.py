@@ -12,7 +12,7 @@ def word_length(document_word):
 
 def syllable_count(document_words):
     '''
-
+    Ref: Needed for Flescher_Reading_Ease, Flescher_Kincaid_Grade_Level
     :param document: List of tokenized entries
     :return: Syllable count for each entry in the list
     '''
@@ -32,7 +32,7 @@ def syllable_count(document_words):
         syllable_list.append(count)
     return syllable_list
 
-def word_frequency(lemma, word_freq_dict, word_dict_corpus_size=1000000):
+def word_frequency(document_word_freq_dict, background_corpus_word_freq_dict, document_size, background_corpus_size=1000000):
     '''
     Ref: CohMetrix - Grasser2004 - Word Frequency
     Ref: Pitler08 - Vocabulary -> log likelihood of an article: sum C(w) * log(P(w|M)); C(w) count of word; P(w|M) probability of w occuring in M; M is the background Corpus
@@ -42,12 +42,12 @@ def word_frequency(lemma, word_freq_dict, word_dict_corpus_size=1000000):
     :param word_freq_dict: dict, frequency directory for words in German
     :return: int
     '''
-    min_freq = 1/word_dict_corpus_size
-    text_size = len(lemma)
-    count_dict = to_count_dict(lemma)
-    corpus_freq = np.array([word_freq_dict.get(k, min_freq)/word_dict_corpus_size for k, v in count_dict.items()])
-    text_freq = np.array([v/ text_size for k, v in count_dict.items()])
+    corp_min_freq = 1/background_corpus_size
+    corpus_word_freq = [(background_corpus_word_freq_dict.get(k, corp_min_freq)/background_corpus_size,
+                         np.log10((v * (document_word_freq_dict.get(k, corp_min_freq)/background_corpus_size)))) for k, v in document_word_freq_dict.items()]
+    corpus_freq = np.array([i[0] for i in corpus_word_freq])
+    word_freq = np.array([i[0] for i in corpus_word_freq])
+    text_freq = np.array(document_word_freq_dict.values())
     corr_matrix = np.corrcoef(x=corpus_freq, y=text_freq)
-    word_freq = [np.log10((v * (word_freq_dict.get(k, min_freq)/word_dict_corpus_size))) for k, v in count_dict.items()]
-    return mean_of_list(word_freq), corr_matrix[0, 1], len(word_freq)/(text_size/1000)
+    return mean_of_list(word_freq), corr_matrix[0, 1], len(word_freq)/(document_size/1000)
         

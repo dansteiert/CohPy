@@ -1,8 +1,8 @@
-from Helper.Helper_functions import search_tag_set, to_count_dict
+from Helper.Helper_functions import search_tag_set, to_count_dict, mean_of_list
 import numpy as np
 
-def type_token_ratio(document_lemma, document_tags, accept_tags=[], accept_tags_start_with=["N"], exclude_tags=[],
-                     exclude_tags_start_with=[]):
+
+def type_token_ratio(tagsets_by_doc, tagset_name):
     '''
     Ref: Grasser2004 - Type:Token Ratio
     Ref: Crossley2016 - Type-token ratio
@@ -17,19 +17,18 @@ def type_token_ratio(document_lemma, document_tags, accept_tags=[], accept_tags_
     :return: float, ratio # types/ sum of tokens
     '''
 
-    tag_list_nouns = search_tag_set(aggregate=document_lemma, tags=document_tags, accept_tags=accept_tags,
-                                    accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
-                                    exclude_tags_start_with=exclude_tags_start_with)
-    count_dict = to_count_dict(aggregate_list=tag_list_nouns)
-    if len(count_dict) == 0:
-        return 0
+    tagset_dict = tagsets_by_doc.get(tagset_name, {})
+        
+    type = len(tagset_dict)
+    token = sum(tagset_dict.values())
+    if token > 0:
+        return type/token
     else:
-        return np.log10(len(count_dict) / sum(count_dict.values()))
+        return np.Infinity
 
 
 # Todo: There are two kinds of lexical diversity implement both!!
-def lexical_diversity(document_tags, accept_tags=[], accept_tags_start_with=[], exclude_tags=[],
-                      exclude_tags_start_with=["$"]):
+def lexical_diversity(tagsets_by_sentence, tagset_name):
     '''
     Similar to Type-Token Ratio, it searches for types, unique occuring POS elements
     :param document_tags: list, a set of POS-tag, needed for check_tags function
@@ -39,6 +38,8 @@ def lexical_diversity(document_tags, accept_tags=[], accept_tags_start_with=[], 
     :param exclude_tags_start_with: list, a set of POS-tag, needed for check_tags function
     :return: int, Number of Types
     '''
+    
+    
     tag_list = search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=accept_tags,
                               accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
                               exclude_tags_start_with=exclude_tags_start_with)
@@ -130,3 +131,27 @@ def POS_frequency(document_tags, accept_tags=[], accept_tags_start_with=[], excl
     normalizer = len(document_tags)/1000
     tag_dict = {key: val / normalizer for (key, val) in count_dict.items()}
     return tag_dict
+
+
+def ratio_tags_a_to_tags_b(tagsets_by_doc, tagset_a, tagset_b):
+    '''
+    Ref: CohMetrix. Grasser 2004 - Part of Speech
+    A ratio of Content to functional POS elements is calculated.
+    :param document_tags: list, of tags
+    :param content_tags: list, a set of POS-tag, needed for check_tags function
+    :param content_tags_start_with: list, a set of POS-tag, needed for check_tags function
+    :param exclude_content_tags: list, a set of POS-tag, needed for check_tags function
+    :param exclude_content_tags_start_with: list, a set of POS-tag, needed for check_tags function
+    :param functional_tags: list, a set of POS-tag, needed for check_tags function
+    :param functional_tags_start_with: list, a set of POS-tag, needed for check_tags function
+    :param exclude_functional_tags: list, a set of POS-tag, needed for check_tags function
+    :param exclude_functional_tags_start_with: list, a set of POS-tag, needed for check_tags function
+    :return: float, ratio of content to functional POS elements
+    '''
+    
+    tags_a = tagsets_by_doc.get(tagset_a, {})
+    tags_b = tagsets_by_doc.get(tagset_b, {})
+    if len(tags_b) > 0:
+        return sum(tags_a.values()) / sum(tags_b.values())
+    else:
+        return np.Infinity
