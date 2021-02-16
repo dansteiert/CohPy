@@ -22,7 +22,7 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
          concreteness_score_label=("AbsConc", "AbstCon"),
          word_freq_path=(os.path.join(os.getcwd(),"data", "Score files", "eng_wikipedia_2016_1M-words.txt"),
                          os.path.join(os.getcwd(),"data", "Score files", "deu_wikipedia_2016_1M-words.txt")),
-         word_freq_sep=("\t", "\t"), word_freq_index_col=(0, 0), word_freq_col_names=(["word", "frequency"], ["word", "frequency"]),
+         word_freq_sep=("\t", "\t"), word_freq_index_col=(0, 0), word_freq_col=("frequency", "frequency"), word_freq_identifier=("word", "word"),
          word_freq_header=(None, None), word_freq_corpus_size=(1000000, 1000000),
          # w2v_model_path=(os.path.join(os.getcwd(), "data", "Score files", "120sdewac_sg300.vec"),
          #                 os.path.join(os.getcwd(), "data", "Score files", "120sdewac_sg300.vec")),
@@ -35,7 +35,7 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
          selected_Gutenberg=False, target_path_selected_gutenberg=os.path.join(os.getcwd(), "data", "score_collection_selected_gutenberg.tsv"),
          run_extra_books=True, target_path_extra_books=os.path.join(os.getcwd(), "data", "score_collection_extra_books.tsv"),
          file_path_extra_books=os.path.join(os.getcwd(), "data", "Extra_books"),
-         run_new_documents=True, target_path_new_documents=os.path.join(os.getcwd(), "data", "score_collection_new_documents.tsv"),
+         run_new_documents=False, target_path_new_documents=os.path.join(os.getcwd(), "data", "score_collection_new_documents.tsv"),
          file_path_new_documents=os.path.join(os.getcwd(), "data", "New_documents")):
     
     print(datetime.datetime.now(), "Start Readability Calculations")
@@ -60,9 +60,9 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
 
     print(datetime.datetime.now(), "Load Word Frequencies")
     # <editor-fold desc="Load Word Frequencies">
-    df_background_corpus_freq_list = [load_word_freq(path=path, sep=sep, header=header, index_col=index_col, names=names) for
-                       path, sep, header, index_col, names in zip(word_freq_path, word_freq_sep, word_freq_header,
-                                                                  word_freq_index_col, word_freq_col_names)]
+    df_background_corpus_freq_list = [load_word_freq(path=path, sep=sep, header=header, index_col=index_col, identifier=freq_ident,freq_column=freq_col) for
+                       path, sep, header, index_col, freq_col, freq_ident in zip(word_freq_path, word_freq_sep, word_freq_header,
+                                                                  word_freq_index_col, word_freq_col, word_freq_identifier)]
     # </editor-fold>
 
     print(datetime.datetime.now(), "Load Connectives")
@@ -165,10 +165,11 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
 
                 # <editor-fold desc="Run text file thorugh Pipeline">
                 flipper = False
-                for w2v_mod, t_tagger, l, df_affinity, aff_label, df_background_corpus, freq_corpus_size, df_connective, conn_type_label in zip(w2v_model, tree_tagger,
+                for w2v_mod, t_tagger, l, df_affinity, aff_label, conc_label, df_background_corpus, freq_corpus_size, df_connective, conn_type_label in zip(w2v_model, tree_tagger,
                                                                                                     languages,
                                                                                                     df_affinity_list,
                                                                                                     affinity_score_label,
+                                                                                                    concreteness_score_label,
                                                                                                     df_background_corpus_freq_list,
                                                                                                     word_freq_corpus_size,
                                                                                                     df_connective_list, connective_label):
@@ -178,7 +179,7 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
                         temp_dict = pipeline(text=text, language=l, w2v_model=w2v_mod,
                                              tagger=t_tagger,
                                              df_affinity=df_affinity, affinity_score_label=aff_label,
-                                             concreteness_label=concreteness_score_label,
+                                             concreteness_label=conc_label,
                                              df_background_corpus_frequency=df_background_corpus, background_corpus_size=freq_corpus_size,
                                              df_connective=df_connective, connective_type_label=conn_type_label)
                 if not flipper:
@@ -312,19 +313,26 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
 
             # <editor-fold desc="Run through Pipeline">
             flipper = False
-            for w2v_mod, t_tagger, l, df_affinity, aff_label, df_background_corpus, freq_corpus_size, df_connective, conn_type_label in zip(
-                    w2v_model, tree_tagger, languages, df_affinity_list,  affinity_score_label,
-                    df_background_corpus_freq_list, word_freq_corpus_size, df_connective_list, connective_label):
+            for w2v_mod, t_tagger, l, df_affinity, aff_label, conc_label, df_background_corpus, freq_corpus_size, df_connective, conn_type_label in zip(
+                    w2v_model, tree_tagger,
+                    languages,
+                    df_affinity_list,
+                    affinity_score_label,
+                    concreteness_score_label,
+                    df_background_corpus_freq_list,
+                    word_freq_corpus_size,
+                    df_connective_list, connective_label):
                 if doc_language == l:
                     flipper = True
                     print(title, doc_language, "progress: ", end="")
                     temp_dict = pipeline(text=text, language=l, w2v_model=w2v_mod,
                                          tagger=t_tagger,
                                          df_affinity=df_affinity, affinity_score_label=aff_label,
-                                         concreteness_label=concreteness_score_label,
+                                         concreteness_label=conc_label,
                                          df_background_corpus_frequency=df_background_corpus,
                                          background_corpus_size=freq_corpus_size,
                                          df_connective=df_connective, connective_type_label=conn_type_label)
+
             if not flipper:
                 print("language not yet implemented", l)
                 continue

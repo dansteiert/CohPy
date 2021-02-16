@@ -48,6 +48,7 @@ def tag_overlap(tagset_by_sent, tagset_name):
     :return:
     '''
 
+    # print("Tag OVerlap")
     tagset = tagset_by_sent.get(tagset_name, {})
     v = []
     for index_a, tagset_sent in enumerate(tagset):
@@ -57,6 +58,7 @@ def tag_overlap(tagset_by_sent, tagset_name):
         lemma_set_sent_b = set(tagset[index_a + 1].keys())
 
         overlapping_lemma = lemma_set_sent_a.intersection(lemma_set_sent_b)
+        # print(lemma_set_sent_a, lemma_set_sent_b, overlapping_lemma)
         if len(lemma_set_sent_b) > 0:
             v.append(len(overlapping_lemma) / len(lemma_set_sent_b))
     return mean_of_list(v)

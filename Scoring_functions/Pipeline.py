@@ -127,17 +127,20 @@ def pipeline(text, language, w2v_model, tagger, df_affinity, affinity_score_labe
     # </editor-fold>
 
     print("#", end="")
-    # <editor-fold desc="Affinity Scores">
-    affinity_concretness_label = affinity_score_label
-    affinity_concretness_label.append(concreteness_label)
-    (dict_affinities_by_sent, hitrate_affinities) = affinity_conc_score(lemma_by_sent=lemma_by_sentence, df_affinity=df_affinity,
-                                                              affinity_conc_label=affinity_concretness_label, size_of_document=document_words)
-    # </editor-fold>
-
-    print("#", end="")
     # <editor-fold desc="Word Frequencies">
     word_frequency_by_sentence_dict, word_frequency_by_document_dict = word_frequencies(lemma_by_sent=lemma_by_sentence)
     # </editor-fold>
+
+
+    print("#", end="")
+    # <editor-fold desc="Affinity Scores">
+    affinity_concretness_label = affinity_score_label
+    affinity_concretness_label.append(concreteness_label)
+    (dict_affinities_by_sent, hitrate_affinities) = affinity_conc_score(lemma_dict_by_sent=word_frequency_by_sentence_dict, df_affinity=df_affinity,
+                                                              affinity_conc_label=affinity_concretness_label, size_of_document=document_words)
+    # </editor-fold>
+
+
     
     # </editor-fold>
     
@@ -171,13 +174,13 @@ def pipeline(text, language, w2v_model, tagger, df_affinity, affinity_score_labe
     
     (mean_sent_length, max_sentence_length) = stat_sentence_length(lemma_by_sent=lemma_by_sentence)
     
-    mean_punctuations = mean_tags_by_sentence(tagsets_by_doc=tagsets_by_doc, tagset_name="Punctuations")
+    mean_punctuations = mean_tags_by_sentence(tagsets_by_doc=tagsets_by_doc, tagset_name="Punctuations", document_sentence=document_sentences)
     
-    mean_conjunctions = mean_tags_by_sentence(tagsets_by_doc=tagsets_by_doc, tagset_name="Conjunctions")
+    mean_conjunctions = mean_tags_by_sentence(tagsets_by_doc=tagsets_by_doc, tagset_name="Conjunctions", document_sentence=document_sentences)
     
-    mean_pronouns = mean_tags_by_sentence(tagsets_by_doc=tagsets_by_doc, tagset_name="Pronouns")
+    mean_pronouns = mean_tags_by_sentence(tagsets_by_doc=tagsets_by_doc, tagset_name="Pronoun", document_sentence=document_sentences)
     
-    mean_articles = mean_tags_by_sentence(tagsets_by_doc=tagsets_by_doc, tagset_name="Article")
+    mean_articles = mean_tags_by_sentence(tagsets_by_doc=tagsets_by_doc, tagset_name="Article", document_sentence=document_sentences)
     
     unique_content_incidence = unique_lemma(tagsets_by_doc=tagsets_by_doc, tagset_name="Content", document_sentences=document_sentences)
 

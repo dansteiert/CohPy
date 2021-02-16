@@ -1,6 +1,6 @@
 from Helper.Helper_functions import search_tag_set, to_count_dict, mean_of_list
 
-def mean_tags_by_sentence(tagsets_by_doc, tagset_name):
+def mean_tags_by_sentence(tagsets_by_doc, tagset_name, document_sentence):
     '''
     Ref: Pitler08 - Elements of lexical cohesion: # Pronouns; # definite articles - only Tagset for articles available though
     
@@ -9,7 +9,7 @@ def mean_tags_by_sentence(tagsets_by_doc, tagset_name):
     :return
     '''
     tagset = tagsets_by_doc.get(tagset_name, {})
-    return mean_of_list(tagset.values())
+    return mean_of_list(tagset.values())/document_sentence
     
 
 

@@ -40,18 +40,22 @@ def connective_incidence(lemma, df_connective, connective_type_label):
         temp = []
         for i in range(0, 3):
             search_string = " ".join(lemma[index: index + i])
-            try:
-                temp_row = df_connective.query(expr="index == '%s'" % search_string)
-            except:
-                continue
-            if temp_row.shape[0] > 0:
-                temp.append(temp_row.loc[search_string, connective_type_label])
+            # try:
+            #     temp_row = df_connective.query(expr="index == '%s'" % search_string)
+            # except:
+            #     continue
+            # if temp_row.shape[0] > 0:
+            #     temp.append(temp_row.loc[search_string, connective_type_label])
+            temp_dict = df_connective.get(search_string, None)
+            if temp_dict is not None:
+                temp.append(temp_dict.get(connective_type_label, None))
         for i in reversed(temp):
             if i is not None:
                 agg_list.append(i)
                 break
     count_dict = to_count_dict(agg_list)
-    all_conncetives = list(set(df_connective[connective_type_label].tolist()))
+    # all_conncetives = list(set(df_connective[connective_type_label].tolist()))
+    all_conncetives = list(set([i.get("Connective Type", None) for i in df_connective.values()]))
     missing_connectives = [i for i in all_conncetives if i not in count_dict.keys()]
     count_dict = {**count_dict, **{i: 0 for i in missing_connectives}}
     normalizer = len(lemma) / 1000

@@ -197,7 +197,8 @@ def load_score_df(path_to_file, sep, identifier, column):
         df_word = df_word[column]
     else:
         df_word = df_word[[column]]
-    return df_word
+    word_dict = df_word.to_dict(orient="index")
+    return word_dict
 
 
 
@@ -210,12 +211,14 @@ def POS_tagger(tagger, document):
     return (words, tags, lemmas)
 
 
-def load_word_freq(path, sep="\t", header=None, index_col=0, names=["word", "frequency"]):
-    df = pd.read_csv(path, sep=sep, header=header, index_col=index_col, names=names, quoting=3)
-    df = df[df[names[-1]] > 0]
-    # list_dict = df.to_dict(orient="index")
-    # return list_dict
-    return df
+def load_word_freq(path, sep="\t", header=None, index_col=0, identifier="word", freq_column="freqency"):
+    df = pd.read_csv(path, sep=sep, header=header, index_col=index_col, names=[identifier, freq_column], quoting=3)
+    df = df.drop_duplicates(subset=[identifier])
+    df = df.set_index(identifier)
+    df= df[df[freq_column] > 1]
+    list_dict = df.to_dict(orient="index")
+    return list_dict
+    # return df
     
 
 def sort_by_POS_tags(aggregator_by_sent=[], tags_by_sent=[], accept=[], accept_star_with=[], exclude=[],
