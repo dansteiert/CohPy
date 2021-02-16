@@ -21,4 +21,7 @@ def stat_sentence_length(lemma_by_sent):
     :return:
     '''
     sent_lengt = [len(i) for i in lemma_by_sent]
-    return (mean_of_list(sent_lengt), max(sent_lengt))
+    if len(sent_lengt) > 0:
+        return (mean_of_list(sent_lengt), max(sent_lengt))
+    else:
+        return 0, 0

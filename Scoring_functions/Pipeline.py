@@ -4,13 +4,13 @@ from Scoring_functions.Statistics_word_level import word_length, syllable_count,
 from Scoring_functions.Statistics_sentence_level import mean_tags_by_sentence, stat_sentence_length
 from Scoring_functions.Lexical_sentence_level import type_token_ratio, lexical_diversity, ratio_tags_a_to_tags_b
 from Scoring_functions.Statistics_document_level import logical_incidence, connective_incidence, unique_lemma, Flescher_Kincaid_Grade_Level, Flescher_Reading_Ease
-from Scoring_functions.Cohesion_Sentence_Sentence import tag_overlap, semantic_shift, affinity_shift
+from Scoring_functions.Cohesion_Sentence_Sentence import tag_overlap, sentiment_shift, affinity_shift
 
-
+import datetime
 import numpy as np
 
-def pipeline(text, language, w2v_model, tagger, affinity_dict, affinity_score_label, concreteness_label,
-             word_freq_dict, word_freq_corpus_size, connective_dict):
+def pipeline(text, language, w2v_model, tagger, df_affinity, affinity_score_label, concreteness_label,
+             df_background_corpus_frequency, background_corpus_size, df_connective, connective_type_label):
     result_dict = {}
     if language == "de":
         from Tagsets.Tagset_de import nouns_accept_tags, nouns_accept_tags_start_with, nouns_exclude_tags, nouns_exclude_tags_start_with
@@ -46,9 +46,9 @@ def pipeline(text, language, w2v_model, tagger, affinity_dict, affinity_score_la
 
     else:
         print("Language not yet implemented - add Tagset_LANG.py file and import it in the pipline file.")
-    
+
+    print("#", end="")
     # <editor-fold desc="Preprocessing">
-    document_sentences = len()
     segmented = split_at_charset(text=text, sep=["\n\n"])
     wtl = [POS_tagger(tagger=tagger, document=i) for i in segmented]
     
@@ -79,20 +79,27 @@ def pipeline(text, language, w2v_model, tagger, affinity_dict, affinity_score_la
     
     document_sentences = len(lemma_by_sentence)
     document_words = len(lemma)
+    
+    if document_sentences > 0 and document_words > 0:
+        pass
+    else:
+        return {}
 
-
+    print("#", end="")
     # <editor-fold desc="Sort_by_tagsets">
     accept_tags = [count_accept_tags, content_accept_tags, functional_accept_tags, noun_pronouns_accept_tags,
                    punctuation_accept_tags, punctuation_fin_accept_tags, conjunctions_accept_tags, logical_accept_tags]
     accept_tags_start_with = [count_accept_tags_start_with, content_accept_tags_start_with,
                               functional_accept_tags_start_with, noun_pronouns_accept_tags_start_with,
-                              punctuation_fin_accept_tags_start_with, conjunctions_accept_tags_start_with,
+                              punctuation_accept_tags_start_with, punctuation_fin_accept_tags_start_with,
+                              conjunctions_accept_tags_start_with,
                               logical_accept_tags_start_with]
     exclude_tags = [count_exclude_tags, content_exclude_tags, functional_exclude_tags, noun_pronouns_exclude_tags,
-                    punctuation_fin_exclude_tags, conjunctions_exclude_tags, logical_exclude_tags]
+                    punctuation_exclude_tags, punctuation_fin_exclude_tags, conjunctions_exclude_tags, logical_exclude_tags]
     exclude_tags_start_with = [count_exclude_tags_start_with, content_exclude_tags_start_with,
                                functional_exclude_tags_start_with, noun_pronouns_exclude_tags_start_with,
-                               punctuation_fin_exclude_tags_start_with, conjunctions_exclude_tags_start_with,
+                               punctuation_exclude_tags_start_with, punctuation_fin_exclude_tags_start_with,
+                               conjunctions_exclude_tags_start_with,
                                logical_exclude_tags_start_with]
     tagset_names = ["Count", "Content", "Functional", "Noun and Pronoun", "Punctuations",
                      "Punctuation Sentence Finishing", "Conjunctions", "Logicals"]
@@ -118,44 +125,48 @@ def pipeline(text, language, w2v_model, tagger, affinity_dict, affinity_score_la
                                    exclusive_order_tagsets=exclusive_tagset_names
                                    )
     # </editor-fold>
-    
+
+    print("#", end="")
     # <editor-fold desc="Affinity Scores">
     affinity_concretness_label = affinity_score_label
     affinity_concretness_label.append(concreteness_label)
-    (dict_affinities_by_sent, hitrate_affinities) = affinity_conc_score(lemma_by_sent=lemma_by_sentence, affinity_conc_dict=affinity_dict,
+    (dict_affinities_by_sent, hitrate_affinities) = affinity_conc_score(lemma_by_sent=lemma_by_sentence, df_affinity=df_affinity,
                                                               affinity_conc_label=affinity_concretness_label, size_of_document=document_words)
     # </editor-fold>
 
+    print("#", end="")
     # <editor-fold desc="Word Frequencies">
     word_frequency_by_sentence_dict, word_frequency_by_document_dict = word_frequencies(lemma_by_sent=lemma_by_sentence)
     # </editor-fold>
     
     # </editor-fold>
     
+    print("#", end="")
     # <editor-fold desc="Statistics Word Level">
     mean_word_length = word_length(document_word=words)
     syllables_list = syllable_count(document_words=words)
     mean_syllable_count = mean_of_list(syllables_list)
-    log_word_freq, text_corpus_corr, unique_word_incidence = word_frequency(document_word_freq_dict=word_frequency_by_sentence_dict,
+    log_word_freq, text_corpus_corr, unique_word_incidence = word_frequency(document_word_freq_dict=word_frequency_by_document_dict,
                                                                             document_size=document_sentences,
-                                                                            background_corpus_word_freq_dict=word_freq_dict,
-                                                                            background_corpus_size=word_freq_corpus_size)
+                                                                            df_background_corpus_frequency=df_background_corpus_frequency,
+                                                                            background_corpus_size=background_corpus_size)
     
     result_dict = {**result_dict, **{"Mean word length": mean_word_length, "Mean syllable count": mean_syllable_count,
                                      "log word frequency": log_word_freq, "Vocabulary correlation": text_corpus_corr,
                                      "Unique word incidence": unique_word_incidence, "Document length (in words)": document_words,
                                      "Document length (in sentences)": document_sentences}}
     # </editor-fold>
-    
-    # <editor-fold desc="Lexical Word Level">
 
+    print("#", end="")
+    # <editor-fold desc="Lexical Word Level">
 
     mean_concreteness_score = mean_concreteness(concreteness_label=concreteness_label, affinity_conc_dict=dict_affinities_by_sent)
 
     result_dict = {**result_dict, **{"Mean Concretness Score": mean_concreteness_score, "Hitrate Affinity Scores": hitrate_affinities}}
     
     # </editor-fold>
-    
+
+    print("#", end="")
     # <editor-fold desc="Statistical Sentence Level">
     
     (mean_sent_length, max_sentence_length) = stat_sentence_length(lemma_by_sent=lemma_by_sentence)
@@ -176,7 +187,8 @@ def pipeline(text, language, w2v_model, tagger, affinity_dict, affinity_score_la
                                      "Mean articles per sentence": mean_articles, "Unique Content Incidence": unique_content_incidence}}
     
     # </editor-fold>
-    
+
+    print("#", end="")
     # <editor-fold desc="Lexical Sentence Level">
     cont_func_ratio = ratio_tags_a_to_tags_b(tagsets_by_doc=tagsets_by_doc, tagset_a="Content", tagset_b="Functional")
     pronoun_noun_ratio = ratio_tags_a_to_tags_b(tagsets_by_doc=tagsets_by_doc, tagset_a="Noun", tagset_b="Pronoun")
@@ -208,12 +220,13 @@ def pipeline(text, language, w2v_model, tagger, affinity_dict, affinity_score_la
                    # "Mean lexical diversity per sentence": mean_lexical_diversity,
                    }
     # </editor-fold>
-    
+
+    print("#", end="")
     # <editor-fold desc="Statistics Document Level">
 
-    logical_incidence_score = logical_incidence(tagsets_by_doc=tagsets_by_doc, tagset_name="Logical")
+    logical_incidence_score = logical_incidence(tagsets_by_doc=tagsets_by_doc, tagset_name="Logical", doc_words=document_words)
     
-    connective_incidence_scores = connective_incidence(lemma=lemma, connective_dict=connective_dict)
+    connective_incidence_scores = connective_incidence(lemma=lemma, df_connective=df_connective, connective_type_label=connective_type_label)
 
     
     FRE = Flescher_Reading_Ease(document_words=words, document_syllables=syllables_list,
@@ -225,7 +238,8 @@ def pipeline(text, language, w2v_model, tagger, affinity_dict, affinity_score_la
                                                                                                "Flescher Kincaid Grade Level": FKGL}}
     
     # </editor-fold>
-    
+
+    print("#", end="")
     # <editor-fold desc="Cohesion_Sentence_Sentence">
     # <editor-fold desc="Overlaps">
     nouns_overlap = tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name="Noun")
@@ -243,7 +257,7 @@ def pipeline(text, language, w2v_model, tagger, affinity_dict, affinity_score_la
     all_words_overlap = tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name="all")
     # </editor-fold>
     
-    mean_semantic_shift, mean_semantic_hitrate = semantic_shift(w2v_model=w2v_model, lemma_by_segment=lemma_by_sentence,
+    mean_sentiment_shift, mean_sentiment_hitrate = sentiment_shift(w2v_model=w2v_model, lemma_by_segment=lemma_by_sentence,
                                                                    tags_by_segment=tags_by_sentence,
                                                                    accept_tags=nouns_accept_tags,
                                                                    accept_tags_start_with=nouns_accept_tags_start_with,
@@ -252,11 +266,14 @@ def pipeline(text, language, w2v_model, tagger, affinity_dict, affinity_score_la
     
     affinity_shift_scores = affinity_shift(affinity_score_dict=dict_affinities_by_sent, affinity_label=affinity_score_label)
     
-    result_dict = {**result_dict, **affinity_shift_scores, **{"Noun overlap": nouns_overlap, "Pronoun overlap": pronouns_overlap,
+    result_dict = {**result_dict,  **{"Noun overlap": nouns_overlap, "Pronoun overlap": pronouns_overlap,
                                                               "Noun Pronoun Overlap": noun_pronouns_overlap,
                                      "Verb Overlap": verbs_overlap, "Adverb Overlap": adverbs_overlap, "Adjective Overlap": adjectives_overlap,
                                                               "All Word Overlap": all_words_overlap,
-                                     "Mean semantic shift": mean_semantic_shift, "Hitrate semantic shift": mean_semantic_hitrate}}
+                                     "Mean sentiment shift": mean_sentiment_shift, "Hitrate sentiment shift": mean_sentiment_hitrate},
+                   **affinity_shift_scores,
+                   }
+    print(result_dict)
     # </editor-fold>
     
     

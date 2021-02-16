@@ -1,12 +1,12 @@
 from Helper.Helper_functions import mean_of_list
 
 
-def affinity_conc_score(lemma_by_sent, affinity_conc_dict, affinity_conc_label, size_of_document):
+def affinity_conc_score(lemma_by_sent, df_affinity, affinity_conc_label, size_of_document):
     '''
     Check a list of conretness scores for the mean score of the lemma list
     :param lemma: list, of lemma
     :param conc_dict: dictionary of concreteness scores
-    :return: mean concreteness score and the hitrate
+    :return: set(dict{affinity label: list[sentence list[affinity values per lemma]]}, int, hitrate
     '''
     hitrate = 0
     affinities_by_sent = {}
@@ -17,16 +17,23 @@ def affinity_conc_score(lemma_by_sent, affinity_conc_dict, affinity_conc_label, 
         
         # Iterate over all lemma within the sample and search in reference dictionary for values
         for lemma in sentence:
-            temp_dict = affinity_conc_dict.get(lemma, None)
-            if temp_dict is not None:
-                
+            try:
+                temp_row = df_affinity.query(expr="index == '%s'" % lemma)
+            except:
+                continue
+            # temp_dict = affinity_conc_dict.get(lemma, None)
+            if temp_row.shape[0] > 0:
                 # get for each affinity value for the lemma
                 hitrate += 1
                 for aff_lab in affinity_conc_label:
                     # add to affinitie
-                    temp_aff = temp_affinities.get(aff_lab, [])
-                    temp_aff.append(temp_dict.get(aff_lab, 0))
-                    temp_affinities[aff_lab] = temp_aff
+                    try:
+                        temp_aff = temp_affinities.get(aff_lab, [])
+                        temp_aff.append(temp_row.loc[lemma, aff_lab])
+                        temp_affinities[aff_lab] = temp_aff
+                    except:
+                        print(aff_lab, lemma,
+                              temp_row)
         
         # for each affinity_conc_label, create a list of list of affinity values
         for aff_lab in affinity_conc_label:

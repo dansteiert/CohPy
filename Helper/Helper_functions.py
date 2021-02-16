@@ -15,9 +15,11 @@ def check_tags(tag, accept_tags=[], accept_tags_start_with=[], exclude_tags=[], 
     :param exclude_tags_start_with: list, a set of POS-tag
     :return: boolean, whether the POS-tag is wanted within the group or not
     '''
-
+    # print("Check Tagset")
+    # print(accept_tags, accept_tags_start_with, exclude_tags, exclude_tags_start_with)
     # <editor-fold desc="Looking for accepted Tags, with given exceptions in exclude tags">
     if len(accept_tags_start_with) > 0 and type(accept_tags_start_with) == list:
+        # print("accept start with", accept_tags_start_with)
         if tag[0] in accept_tags_start_with:
             for i in exclude_tags:
                 if i in tag:
@@ -31,6 +33,8 @@ def check_tags(tag, accept_tags=[], accept_tags_start_with=[], exclude_tags=[], 
     
     # <editor-fold desc="Looking for Tags to exclude, with some exceptions">
     elif len(exclude_tags_start_with) > 0 and type(exclude_tags_start_with) == list:
+        # print("exclude start with", exclude_tags_start_with)
+
         if tag[0] in exclude_tags_start_with:
             for i in accept_tags:
                 if i in tag:
@@ -43,6 +47,8 @@ def check_tags(tag, accept_tags=[], accept_tags_start_with=[], exclude_tags=[], 
 
     # <editor-fold desc="Check Tags in Accepted Tags">
     elif len(accept_tags) > 0 and type(accept_tags) == list:
+        # print("accept", accept_tags)
+
         if tag in accept_tags:
             return True
         return False
@@ -50,6 +56,7 @@ def check_tags(tag, accept_tags=[], accept_tags_start_with=[], exclude_tags=[], 
 
     # <editor-fold desc="Check Tags in Excluded Tags">
     elif len(exclude_tags) > 0 and type(exclude_tags) == list:
+        # print("exclude", accept_tags)
         if tag in exclude_tags:
             return False
         return True
@@ -57,8 +64,8 @@ def check_tags(tag, accept_tags=[], accept_tags_start_with=[], exclude_tags=[], 
 
     # <editor-fold desc="Catching Case">
     else:
-        print("No Tagsets given!")
-        return False
+        # print("No Tagsets given!", accept_tags, accept_tags_start_with, exclude_tags, exclude_tags_start_with)
+        return True
     # </editor-fold>
 
 
@@ -147,6 +154,7 @@ def split_into_sentences(aggregator_list, document_tags, accept_tags=["$."], acc
             temp = []
         else:
             temp.append(a)
+    lemma_list.append(temp)
     return lemma_list
 
 
@@ -173,7 +181,7 @@ def split_at_charset(text, sep=[".", ";", "!", "?", ":"]):
     return segmented
 
 
-def list_to_dict(path_to_file, sep, identifier, column):
+def load_score_df(path_to_file, sep, identifier, column):
     '''
     Convert a Pandas Dataframe into a dictionary, with an index column for the key, and a single column as value.
     Only Last duplication is kept!
@@ -183,16 +191,14 @@ def list_to_dict(path_to_file, sep, identifier, column):
     :return: dict
     '''
     df = pd.read_csv(path_to_file, sep=sep)
+    df_word = df[~df.duplicated(subset=[identifier], keep="last")]
+    df_word = df_word.set_index(identifier)
     if type(column) == list and len(column) > 1:
-        df_word = df[~df.duplicated(subset=[identifier], keep="last")]
-        df_word = df_word.set_index(identifier)
         df_word = df_word[column]
-        list_dict = df_word.to_dict(orient="index")
     else:
-        list_dict = {}
-        for ident, col in zip(df[identifier].tolist(), df[column].tolist()):
-            list_dict[ident] = col
-    return list_dict
+        df_word = df_word[[column]]
+    return df_word
+
 
 
 def POS_tagger(tagger, document):
@@ -206,18 +212,42 @@ def POS_tagger(tagger, document):
 
 def load_word_freq(path, sep="\t", header=None, index_col=0, names=["word", "frequency"]):
     df = pd.read_csv(path, sep=sep, header=header, index_col=index_col, names=names, quoting=3)
+    df = df[df[names[-1]] > 0]
+    # list_dict = df.to_dict(orient="index")
+    # return list_dict
     return df
-
+    
 
 def sort_by_POS_tags(aggregator_by_sent=[], tags_by_sent=[], accept=[], accept_star_with=[], exclude=[],
                      exclude_start_with=[], order_tagsets=[],
                      exclusive_accept=[], exclusive_accept_star_with=[], exclusive_exclude=[],
                      exclusive_exclude_start_with=[], exclusive_order_tagsets=[]):
+    '''
+    
+    :param aggregator_by_sent:
+    :param tags_by_sent:
+    :param accept:
+    :param accept_star_with:
+    :param exclude:
+    :param exclude_start_with:
+    :param order_tagsets:
+    :param exclusive_accept:
+    :param exclusive_accept_star_with:
+    :param exclusive_exclude:
+    :param exclusive_exclude_start_with:
+    :param exclusive_order_tagsets:
+    :return:
+    '''
     doc_dict = {}
     full_doc_dict = {}
+    
+    # Iterate over all sentences, with aggregator list (lemma) and their POS tags
     for agg_sentence, tag_sentence in zip(aggregator_by_sent, tags_by_sent):
         sentence_dict = {}
+        
+        # Iterate over each element per sentence (lemma and tag)
         for a, t in zip(agg_sentence, tag_sentence):
+            # generate
             temp_dict = sentence_dict.get("all", {})
             temp_dict[a] = temp_dict.get(a, 0) + 1
             sentence_dict["all"] = temp_dict

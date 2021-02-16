@@ -45,7 +45,11 @@ def sentence_vector_avg(w2v, lemma, tags,
                         exclude_tags=[], exclude_tags_start_with=[]):
     hit = 0
     searched = 0
-    sent_a_vec = np.zeros((w2v.vector_size,), dtype="float32")
+    try:
+        sent_a_vec = np.zeros((w2v.vector_size,), dtype="float32")
+    except:
+        print("No w2v model given!")
+        return 0, 0, 0
     for l_a, t_a in zip(lemma, tags):
         if check_tags(tag=t_a, accept_tags=accept_tags, accept_tags_start_with=accept_tags_start_with,
                       exclude_tags=exclude_tags, exclude_tags_start_with=exclude_tags_start_with):

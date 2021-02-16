@@ -24,7 +24,7 @@ def logical_incidence(tagsets_by_doc, tagset_name, doc_words):
     return incidence_scores
 
 
-def connective_incidence(lemma, connective_dict):
+def connective_incidence(lemma, df_connective, connective_type_label):
     '''
     Ref: Grasser2004 - Connectives
     Ref: Crossley2016- Connectives
@@ -39,14 +39,23 @@ def connective_incidence(lemma, connective_dict):
     for index, l in enumerate(lemma):
         temp = []
         for i in range(0, 3):
-            temp.append(connective_dict.get(" ".join(lemma[index: index + i]), None))
+            search_string = " ".join(lemma[index: index + i])
+            try:
+                temp_row = df_connective.query(expr="index == '%s'" % search_string)
+            except:
+                continue
+            if temp_row.shape[0] > 0:
+                temp.append(temp_row.loc[search_string, connective_type_label])
         for i in reversed(temp):
             if i is not None:
                 agg_list.append(i)
                 break
     count_dict = to_count_dict(agg_list)
+    all_conncetives = list(set(df_connective[connective_type_label].tolist()))
+    missing_connectives = [i for i in all_conncetives if i not in count_dict.keys()]
+    count_dict = {**count_dict, **{i: 0 for i in missing_connectives}}
     normalizer = len(lemma) / 1000
-    connective_incidences = {"incidence connective " + k: v/normalizer for k,v in count_dict.items()}
+    connective_incidences = {"incidence connective " + k: v/normalizer for k, v in count_dict.items()}
     
     return connective_incidences
 

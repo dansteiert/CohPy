@@ -1,7 +1,7 @@
 from Helper.Helper_functions import mean_of_list, search_tag_set
 from Helper.w2v_model import sentence_similarity
 
-def semantic_shift(w2v_model, lemma_by_segment, tags_by_segment, accept_tags=[], accept_tags_start_with=[],
+def sentiment_shift(w2v_model, lemma_by_segment, tags_by_segment, accept_tags=[], accept_tags_start_with=[],
                              exclude_tags=[], exclude_tags_start_with=[]):
     '''
     Ref: Crossley2019 - Semantic similarity features
@@ -32,7 +32,7 @@ def semantic_shift(w2v_model, lemma_by_segment, tags_by_segment, accept_tags=[],
             continue
         v.append(v_temp)
         hit_ratio.append(hr_temp)
-    return mean_of_list(v), mean_of_list(hit_ratio)
+    return (mean_of_list(v), mean_of_list(hit_ratio))
 
 
 def tag_overlap(tagset_by_sent, tagset_name):
@@ -66,21 +66,26 @@ def affinity_shift(affinity_score_dict, affinity_label):
     
     '''
     Ref: Jacobs2018
-    Calculate for the given Affinity scores, their absolute sentiment shift, for adjacent sentences
-    :param lemma_by_sent: list, a list of sentences, which are a list of lemma
-    :param affinity_dict: dictionary with words as identifier and a dict of affinity values as its value
+    Calculate with the Affinity scores, by sentence, their absolute affinity shift, for adjacent sentences, per affinity_label element
+    :param affinity_score_dict: dict{affinity label: list[sentence list[affinity values per lemma]]}
     :param affinity_label: list, of affinity value names
-    :return: list, float mean absolute pairwise affinity scores, for given affinity labels
+    :return: dict, {key=affinity_labels: value=float, mean absolute difference of pairwise sentence affinity}
     '''
     aff_shift_score = {}
+    
+    # Iterate over all affinity_labels
     for aff_lab in affinity_label:
         aff_shift = []
-        aff_by_sent = affinity_score_dict.get(aff_lab, {})
+        aff_by_sent = affinity_score_dict.get(aff_lab, [])
+        
+        # calculate pairwise affinity distance
         for sent_index, aff_list in enumerate(aff_by_sent):
-            if sent_index + 1 >= len(aff_list):
+            if sent_index + 1 >= len(aff_by_sent):
                 continue
             aff_shift.append(abs(sum(aff_list) - sum(aff_by_sent[sent_index + 1])))
         aff_shift_score[aff_lab] = mean_of_list(aff_shift)
+        
+    # Label affinity shift scores for final table
     aff_shift_score = {"Affinity shift " + str(k): v for k, v in aff_shift_score.items()}
     return aff_shift_score
 

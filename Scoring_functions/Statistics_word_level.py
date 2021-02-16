@@ -32,7 +32,7 @@ def syllable_count(document_words):
         syllable_list.append(count)
     return syllable_list
 
-def word_frequency(document_word_freq_dict, background_corpus_word_freq_dict, document_size, background_corpus_size=1000000):
+def word_frequency(document_word_freq_dict, df_background_corpus_frequency, document_size, background_corpus_size=1000000):
     '''
     Ref: CohMetrix - Grasser2004 - Word Frequency
     Ref: Pitler08 - Vocabulary -> log likelihood of an article: sum C(w) * log(P(w|M)); C(w) count of word; P(w|M) probability of w occuring in M; M is the background Corpus
@@ -42,12 +42,31 @@ def word_frequency(document_word_freq_dict, background_corpus_word_freq_dict, do
     :param word_freq_dict: dict, frequency directory for words in German
     :return: int
     '''
-    corp_min_freq = 1/background_corpus_size
-    corpus_word_freq = [(background_corpus_word_freq_dict.get(k, corp_min_freq)/background_corpus_size,
-                         np.log10((v * (document_word_freq_dict.get(k, corp_min_freq)/background_corpus_size)))) for k, v in document_word_freq_dict.items()]
-    corpus_freq = np.array([i[0] for i in corpus_word_freq])
-    word_freq = np.array([i[0] for i in corpus_word_freq])
-    text_freq = np.array(document_word_freq_dict.values())
+    min_freq = np.log10(1/background_corpus_size)
+    
+    freq_in_corpus = []
+    word_familarity = []
+    for k, v in document_word_freq_dict.items():
+        try:
+            temp_row = df_background_corpus_frequency.query(expr="index == '%s'" % k)
+        except:
+            continue
+        if temp_row.shape[0] > 0:
+            try:
+                freq_in_corpus.append(np.log10(float(temp_row.loc[k, "frequency"]) / background_corpus_size))
+                word_familarity.append(np.log10(v/document_size * (float(temp_row.loc[k, "frequency"]) / background_corpus_size)))
+            except:
+                freq_in_corpus.append(min_freq)
+                word_familarity.append(v/document_size * min_freq)
+        else:
+            freq_in_corpus.append(min_freq)
+            word_familarity.append(v / document_size * min_freq)
+
+    corpus_freq = np.array(freq_in_corpus)
+    text_freq = np.array(word_familarity)
     corr_matrix = np.corrcoef(x=corpus_freq, y=text_freq)
-    return mean_of_list(word_freq), corr_matrix[0, 1], len(word_freq)/(document_size/1000)
-        
+    unique_words = [True for k, v in document_word_freq_dict.items() if v == 1]
+    if document_size > 0:
+        return mean_of_list(word_familarity), corr_matrix[0, 1], len(unique_words)/(document_size/1000)
+    else:
+        return mean_of_list(word_familarity), corr_matrix[0, 1], len(unique_words)/(1/1000)
