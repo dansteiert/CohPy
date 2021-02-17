@@ -4,7 +4,7 @@ from Scoring_functions.Statistics_word_level import word_length, syllable_count,
 from Scoring_functions.Statistics_sentence_level import mean_tags_by_sentence, stat_sentence_length
 from Scoring_functions.Lexical_sentence_level import type_token_ratio, lexical_diversity, ratio_tags_a_to_tags_b
 from Scoring_functions.Statistics_document_level import logical_incidence, connective_incidence, unique_lemma, Flescher_Kincaid_Grade_Level, Flescher_Reading_Ease
-from Scoring_functions.Cohesion_Sentence_Sentence import tag_overlap, sentiment_shift, affinity_shift
+from Scoring_functions.Cohesion_Sentence_Sentence import tag_overlap, sentiment_shift, affinity_shift, tense_change
 
 import datetime
 import numpy as np
@@ -27,6 +27,8 @@ def pipeline(text, language, w2v_model, tagger, df_affinity, affinity_score_labe
         from Tagsets.Tagset_de import content_accept_tags, content_accept_tags_start_with, content_exclude_tags, content_exclude_tags_start_with
         from Tagsets.Tagset_de import functional_accept_tags, functional_accept_tags_start_with, functional_exclude_tags, functional_exclude_tags_start_with
         from Tagsets.Tagset_de import article_accept_tags, article_accept_tags_start_with, article_exclude_tags, article_exclude_tags_start_with
+        from Tagsets.Tagset_de import past_accept_tags, past_accept_tags_start_with, past_exclude_tags, past_exclude_tags_start_with
+        from Tagsets.Tagset_de import present_accept_tags, present_accept_tags_start_with, present_exclude_tags, present_exclude_tags_start_with
     
     elif language == "en":
         from Tagsets.Tagset_en import nouns_accept_tags, nouns_accept_tags_start_with, nouns_exclude_tags, nouns_exclude_tags_start_with
@@ -43,6 +45,8 @@ def pipeline(text, language, w2v_model, tagger, df_affinity, affinity_score_labe
         from Tagsets.Tagset_en import content_accept_tags, content_accept_tags_start_with, content_exclude_tags, content_exclude_tags_start_with
         from Tagsets.Tagset_en import functional_accept_tags, functional_accept_tags_start_with, functional_exclude_tags, functional_exclude_tags_start_with
         from Tagsets.Tagset_en import article_accept_tags, article_accept_tags_start_with, article_exclude_tags, article_exclude_tags_start_with
+        from Tagsets.Tagset_en import past_accept_tags, past_accept_tags_start_with, past_exclude_tags, past_exclude_tags_start_with
+        from Tagsets.Tagset_en import present_accept_tags, present_accept_tags_start_with, present_exclude_tags, present_exclude_tags_start_with
 
     else:
         print("Language not yet implemented - add Tagset_LANG.py file and import it in the pipline file.")
@@ -88,21 +92,23 @@ def pipeline(text, language, w2v_model, tagger, df_affinity, affinity_score_labe
     print("#", end="")
     # <editor-fold desc="Sort_by_tagsets">
     accept_tags = [count_accept_tags, content_accept_tags, functional_accept_tags, noun_pronouns_accept_tags,
-                   punctuation_accept_tags, punctuation_fin_accept_tags, conjunctions_accept_tags, logical_accept_tags]
+                   punctuation_accept_tags, punctuation_fin_accept_tags, conjunctions_accept_tags, logical_accept_tags,
+                   past_accept_tags, present_accept_tags]
     accept_tags_start_with = [count_accept_tags_start_with, content_accept_tags_start_with,
                               functional_accept_tags_start_with, noun_pronouns_accept_tags_start_with,
                               punctuation_accept_tags_start_with, punctuation_fin_accept_tags_start_with,
                               conjunctions_accept_tags_start_with,
-                              logical_accept_tags_start_with]
+                              logical_accept_tags_start_with, past_accept_tags_start_with, present_accept_tags_start_with]
     exclude_tags = [count_exclude_tags, content_exclude_tags, functional_exclude_tags, noun_pronouns_exclude_tags,
-                    punctuation_exclude_tags, punctuation_fin_exclude_tags, conjunctions_exclude_tags, logical_exclude_tags]
+                    punctuation_exclude_tags, punctuation_fin_exclude_tags, conjunctions_exclude_tags, logical_exclude_tags,
+                    past_exclude_tags, present_exclude_tags]
     exclude_tags_start_with = [count_exclude_tags_start_with, content_exclude_tags_start_with,
                                functional_exclude_tags_start_with, noun_pronouns_exclude_tags_start_with,
                                punctuation_exclude_tags_start_with, punctuation_fin_exclude_tags_start_with,
                                conjunctions_exclude_tags_start_with,
-                               logical_exclude_tags_start_with]
+                               logical_exclude_tags_start_with, past_exclude_tags_start_with, present_exclude_tags_start_with]
     tagset_names = ["Count", "Content", "Functional", "Noun and Pronoun", "Punctuations",
-                     "Punctuation Sentence Finishing", "Conjunctions", "Logicals"]
+                     "Punctuation Sentence Finishing", "Conjunctions", "Logical", "Past", "Present"]
     
     exclusive_accept_tags = [nouns_accept_tags, pronouns_accept_tags, verbs_accept_tags, adverbs_accept_tags,
                             adjectives_accept_tags, article_accept_tags]
@@ -124,6 +130,7 @@ def pipeline(text, language, w2v_model, tagger, df_affinity, affinity_score_labe
                                    exclusive_exclude=exclusive_exclude_tags, exclusive_exclude_start_with=exclusive_exclude_tags_start_with,
                                    exclusive_order_tagsets=exclusive_tagset_names
                                    )
+
     # </editor-fold>
 
     print("#", end="")
@@ -195,7 +202,7 @@ def pipeline(text, language, w2v_model, tagger, df_affinity, affinity_score_labe
     # <editor-fold desc="Lexical Sentence Level">
     cont_func_ratio = ratio_tags_a_to_tags_b(tagsets_by_doc=tagsets_by_doc, tagset_a="Content", tagset_b="Functional")
     pronoun_noun_ratio = ratio_tags_a_to_tags_b(tagsets_by_doc=tagsets_by_doc, tagset_a="Noun", tagset_b="Pronoun")
-
+    adjective_verb_quotien = ratio_tags_a_to_tags_b(tagsets_by_doc=tagsets_by_doc, tagset_a="Adjective", tagset_b="Verb")
 
     
     # <editor-fold desc="Ratio Scores">
@@ -210,17 +217,13 @@ def pipeline(text, language, w2v_model, tagger, df_affinity, affinity_score_labe
     
 
     # </editor-fold>
-    # TODO!
-    # mean_lexical_diversity = mean_of_list([lexical_diversity(document_tags=i, accept_tags=[], accept_tags_start_with=[],
-    #                                                          exclude_tags=punctuation_accept_tags,
-    #                                                          exclude_tags_start_with=punctuation_accept_tags_start_with)
-    #                                        for i in tags_by_sentence])
+    mean_lexical_diversity = lexical_diversity(word_frequency_dict=word_frequency_by_document_dict, document_sentences=document_sentences)
     result_dict = {**result_dict, **{"Pronoun-noun ratio": pronoun_noun_ratio, "Content word-functional word ratio": cont_func_ratio,
                                      "Type-token ratio nouns": type_token_ratio_nouns, "Type-token ratio verbs": type_token_ratio_verbs,
                                      "Type-token ratio adverbs": type_token_ratio_adverbs, "Type-token ratio adjectives": type_token_ratio_adjectives,
                                      "Type-token ratio all words": type_token_ratio_all_tags, "Type-token ratio pronouns": type_token_ratio_pronoun},
-                                    "Type-token ratio noun and pronoun": type_token_ratio_noun_pronoun
-                   # "Mean lexical diversity per sentence": mean_lexical_diversity,
+                                    "Type-token ratio noun and pronoun": type_token_ratio_noun_pronoun, "Adjective Verb Quotient": adjective_verb_quotien,
+                   "Mean lexical diversity per sentence": mean_lexical_diversity
                    }
     # </editor-fold>
 
@@ -260,6 +263,10 @@ def pipeline(text, language, w2v_model, tagger, df_affinity, affinity_score_labe
     all_words_overlap = tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name="all")
     # </editor-fold>
     
+    mean_tense_changes = tense_change(tagset_by_sent=tagsets_by_sent_dict, tagset_name_past="Past",
+                                      tagset_name_present="Present")
+    
+    
     mean_sentiment_shift, mean_sentiment_hitrate = sentiment_shift(w2v_model=w2v_model, lemma_by_segment=lemma_by_sentence,
                                                                    tags_by_segment=tags_by_sentence,
                                                                    accept_tags=nouns_accept_tags,
@@ -273,7 +280,8 @@ def pipeline(text, language, w2v_model, tagger, df_affinity, affinity_score_labe
                                                               "Noun Pronoun Overlap": noun_pronouns_overlap,
                                      "Verb Overlap": verbs_overlap, "Adverb Overlap": adverbs_overlap, "Adjective Overlap": adjectives_overlap,
                                                               "All Word Overlap": all_words_overlap,
-                                     "Mean sentiment shift": mean_sentiment_shift, "Hitrate sentiment shift": mean_sentiment_hitrate},
+                                     "Mean sentiment shift": mean_sentiment_shift, "Hitrate sentiment shift": mean_sentiment_hitrate,
+                                      "Mean tense changes": mean_tense_changes},
                    **affinity_shift_scores,
                    }
     print(result_dict)

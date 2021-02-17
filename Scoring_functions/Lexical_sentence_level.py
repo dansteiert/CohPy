@@ -28,7 +28,7 @@ def type_token_ratio(tagsets_by_doc, tagset_name):
 
 
 # Todo: There are two kinds of lexical diversity implement both!!
-def lexical_diversity(tagsets_by_sentence, tagset_name):
+def lexical_diversity(word_frequency_dict, document_sentences):
     '''
     Similar to Type-Token Ratio, it searches for types, unique occuring POS elements
     :param document_tags: list, a set of POS-tag, needed for check_tags function
@@ -38,14 +38,8 @@ def lexical_diversity(tagsets_by_sentence, tagset_name):
     :param exclude_tags_start_with: list, a set of POS-tag, needed for check_tags function
     :return: int, Number of Types
     '''
-    
-    
-    tag_list = search_tag_set(aggregate=document_tags, tags=document_tags, accept_tags=accept_tags,
-                              accept_tags_start_with=accept_tags_start_with, exclude_tags=exclude_tags,
-                              exclude_tags_start_with=exclude_tags_start_with)
-    count_dict = to_count_dict(aggregate_list=tag_list)
-    lexical_terms = [k for k, v in count_dict.items() if v > 0]
-    return len(lexical_terms)
+    lex_diversity = len(word_frequency_dict)/document_sentences
+    return lex_diversity
 
 
 def noun_pronoun_proportion(document_tags, nouns_accept_tags=[], nouns_accept_tags_start_with=["N"], nouns_exclude_tags=[],
@@ -136,6 +130,8 @@ def POS_frequency(document_tags, accept_tags=[], accept_tags_start_with=[], excl
 def ratio_tags_a_to_tags_b(tagsets_by_doc, tagset_a, tagset_b):
     '''
     Ref: CohMetrix. Grasser 2004 - Part of Speech
+    Ref: Jacobs 2018 - Adjective-Verb Quotient
+
     A ratio of Content to functional POS elements is calculated.
     :param document_tags: list, of tags
     :param content_tags: list, a set of POS-tag, needed for check_tags function
@@ -155,3 +151,4 @@ def ratio_tags_a_to_tags_b(tagsets_by_doc, tagset_a, tagset_b):
         return sum(tags_a.values()) / sum(tags_b.values())
     else:
         return np.Infinity
+    

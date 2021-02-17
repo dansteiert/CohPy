@@ -20,8 +20,8 @@ def logical_incidence(tagsets_by_doc, tagset_name, doc_words):
     
     normalizer = doc_words / 1000
     tagset["all"] = sum(tagset.values())
-    incidence_scores = {"incidence logical " + str(k): v / normalizer for k, v in tagset.items()}
-    return incidence_scores
+    # incidence_scores = {"incidence logical " + str(k): v / normalizer for k, v in tagset.items()}
+    return {"Incidence logicals": sum(tagset.values())/normalizer}
 
 
 def connective_incidence(lemma, df_connective, connective_type_label):

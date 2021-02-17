@@ -76,4 +76,17 @@ article_accept_tags = ["AT0"]
 article_accept_tags_start_with = []
 article_exclude_tags = []
 article_exclude_tags_start_with = []
+##Past Verb
+past_accept_tags = ["VBD", "VBN", "VDD", "VDN", "VHD", "VHN", "VVD", "VVN"]
+past_accept_tags_start_with = []
+past_exclude_tags = []
+past_exclude_tags_start_with = []
+## Present Verb
+present_accept_tags = ["VBB", "VBG", "VBZ", "VDG", "VDZ", "VHG", "VHZ", "VVG", "VVZ"]
+present_accept_tags_start_with = []
+present_exclude_tags = []
+present_exclude_tags_start_with = []
+
+
+
 # </editor-fold>

@@ -1,5 +1,6 @@
 from Helper.Helper_functions import mean_of_list, search_tag_set
 from Helper.w2v_model import sentence_similarity
+import numpy as np
 
 def sentiment_shift(w2v_model, lemma_by_segment, tags_by_segment, accept_tags=[], accept_tags_start_with=[],
                              exclude_tags=[], exclude_tags_start_with=[]):
@@ -49,7 +50,9 @@ def tag_overlap(tagset_by_sent, tagset_name):
     '''
 
     # print("Tag OVerlap")
-    tagset = tagset_by_sent.get(tagset_name, {})
+    tagset = tagset_by_sent.get(tagset_name, [])
+    if len(tagset) == 0:
+        print("Empty tagset for ", tagset_name)
     v = []
     for index_a, tagset_sent in enumerate(tagset):
         if index_a + 1 >= len(tagset):
@@ -92,4 +95,47 @@ def affinity_shift(affinity_score_dict, affinity_label):
     return aff_shift_score
 
 
+def tense_change(tagset_by_sent, tagset_name_past="Past", tagset_name_present="Present"):
+    '''
+    Calculate mean time changes between adjacent sentences with POS tags
+    :param lemma_by_segment:
+    :param tags_by_segment:
+    :param accept_tags:
+    :param accept_tags_start_with:
+    :param exclude_tags:
+    :param exclude_tags_start_with:
+    :return:
+    '''
+    
+    tagset_past = tagset_by_sent.get(tagset_name_past, [])
+    tagset_present = tagset_by_sent.get(tagset_name_present, [])
+    v = []
+    for index_a, (past_dict, present_dict) in enumerate(zip(tagset_present, tagset_past)):
+        if index_a + 1 >= len(tagset_present):
+            continue
+        
+        if len(present_dict) > len(past_dict):
+            time_a = 1  # present
+        elif len(present_dict) < len(past_dict):
+            time_a = -1  # past
+        else:
+            time_a = 0  # unclear
+        
+        sent_b_past_dict = tagset_past[index_a + 1]
+        sent_b_present_dict = tagset_present[index_a + 1]
+        
+        if len(sent_b_present_dict) > len(sent_b_past_dict):
+            time_b = 1  # present
+        elif len(sent_b_present_dict) < len(sent_b_past_dict):
+            time_b = -1  # past
+        else:
+            time_b = 0  # unclear
+        
+        
+        if time_a == 0 and time_b == 0:
+            v.append(False)
+        else:
+            v.append(time_a == time_b)
+
+    return mean_of_list(v)
 

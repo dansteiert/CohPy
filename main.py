@@ -56,6 +56,7 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
     df_affinity_list = [load_score_df(path_to_file=path, sep=sep, column=label_list, identifier=identifier) for
                       path, sep, identifier, label_list in zip(affinity_score_paths, affinity_score_separator,
                                                                affinity_identifier, aff_conc_label)]
+    # df_affinity_list = [None, None]
     # </editor-fold>
 
     print(datetime.datetime.now(), "Load Word Frequencies")
@@ -63,6 +64,7 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
     df_background_corpus_freq_list = [load_word_freq(path=path, sep=sep, header=header, index_col=index_col, identifier=freq_ident,freq_column=freq_col) for
                        path, sep, header, index_col, freq_col, freq_ident in zip(word_freq_path, word_freq_sep, word_freq_header,
                                                                   word_freq_index_col, word_freq_col, word_freq_identifier)]
+    # df_background_corpus_freq_list = [None, None]
     # </editor-fold>
 
     print(datetime.datetime.now(), "Load Connectives")

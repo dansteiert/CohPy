@@ -241,7 +241,7 @@ def sort_by_POS_tags(aggregator_by_sent=[], tags_by_sent=[], accept=[], accept_s
     :param exclusive_order_tagsets:
     :return:
     '''
-    doc_dict = {}
+    dict_by_sentence = {}
     full_doc_dict = {}
     
     # Iterate over all sentences, with aggregator list (lemma) and their POS tags
@@ -250,7 +250,7 @@ def sort_by_POS_tags(aggregator_by_sent=[], tags_by_sent=[], accept=[], accept_s
         
         # Iterate over each element per sentence (lemma and tag)
         for a, t in zip(agg_sentence, tag_sentence):
-            # generate
+            # generate tagsets without exclduing elements
             temp_dict = sentence_dict.get("all", {})
             temp_dict[a] = temp_dict.get(a, 0) + 1
             sentence_dict["all"] = temp_dict
@@ -262,30 +262,29 @@ def sort_by_POS_tags(aggregator_by_sent=[], tags_by_sent=[], accept=[], accept_s
                 if check_tags(tag=t, accept_tags=at, accept_tags_start_with=atsw, exclude_tags=et,
                               exclude_tags_start_with=etsw):
                     temp_dict = sentence_dict.get(tagset, {})
-                    temp_dict[a]= temp_dict.get(a, 0) + 1
+                    temp_dict[a] = temp_dict.get(a, 0) + 1
                     sentence_dict[tagset] = temp_dict
 
                     temp_dict = full_doc_dict.get(tagset, {})
-                    temp_dict[a]= temp_dict.get(a, 0) + 1
+                    temp_dict[a] = temp_dict.get(a, 0) + 1
                     full_doc_dict[tagset] = temp_dict
-                    
             for at, atsw, et, etsw, tagset in zip(exclusive_accept, exclusive_accept_star_with, exclusive_exclude, exclusive_exclude_start_with,
                                                   exclusive_order_tagsets):
                 if check_tags(tag=t, accept_tags=at, accept_tags_start_with=atsw, exclude_tags=et,
                               exclude_tags_start_with=etsw):
                     temp_dict = sentence_dict.get(tagset, {})
-                    temp_dict[a]= temp_dict.get(a, 0) + 1
+                    temp_dict[a] = temp_dict.get(a, 0) + 1
                     sentence_dict[tagset] = temp_dict
-
+    
                     temp_dict = full_doc_dict.get(tagset, {})
-                    temp_dict[a]= temp_dict.get(a, 0) + 1
+                    temp_dict[a] = temp_dict.get(a, 0) + 1
                     full_doc_dict[tagset] = temp_dict
                     break
-        for tagset in order_tagsets:
-            temp_list = doc_dict.get(tagset, [])
+        for tagset in ("all", *order_tagsets, *exclusive_order_tagsets):
+            temp_list = dict_by_sentence.get(tagset, [])
             temp_list.append(sentence_dict.get(tagset, {}))
-            doc_dict[tagset] = temp_list
-    return doc_dict, full_doc_dict
+            dict_by_sentence[tagset] = temp_list
+    return dict_by_sentence, full_doc_dict
 
 
 def word_frequencies(lemma_by_sent):
