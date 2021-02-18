@@ -5,13 +5,62 @@ from Scoring_functions.Statistics_sentence_level import mean_tags_by_sentence, s
 from Scoring_functions.Lexical_sentence_level import type_token_ratio, lexical_diversity, ratio_tags_a_to_tags_b
 from Scoring_functions.Statistics_document_level import logical_incidence, connective_incidence, unique_lemma, Flescher_Kincaid_Grade_Level, Flescher_Reading_Ease
 from Scoring_functions.Cohesion_Sentence_Sentence import tag_overlap, sentiment_shift, affinity_shift, tense_change
-
+from Helper.w2v_model import sentiment_scores
+import os
+import csv
 import datetime
 import numpy as np
 
-def pipeline(text, language, w2v_model, tagger, df_affinity, affinity_score_label, concreteness_label,
-             df_background_corpus_frequency, background_corpus_size, df_connective, connective_type_label):
-    result_dict = {}
+def pipeline(text_path, language, language_order, w2v_model, tagger, df_affinity, affinity_score_label, concreteness_label,
+             df_background_corpus_frequency, background_corpus_size, df_connective, connective_type_label, target_path,
+             title, author, gutenberg_id, gutenberg_meta_dict_elem=None):
+    
+    # <editor-fold desc="Get Gutenberg Metadata">
+    if gutenberg_meta_dict_elem is not None:
+        try:
+            language = gutenberg_meta_dict_elem["languages"][0]
+        except:
+            language = None
+        try:
+            title = gutenberg_meta_dict_elem["title"]
+            title = title.replace("\r", " ")
+            title = title.replace("\n", " ")
+            title = title
+        except:
+            title = None
+        try:
+            author = gutenberg_meta_dict_elem["authors"][0]["name"]
+        except:
+            author = None
+        try:
+            gutenberg_id = gutenberg_meta_dict_elem["id"]
+        except:
+            gutenberg_id = None
+    # </editor-fold>
+    
+    # indexer to determine language specific dependencies
+    indexer = language_order.index(language)
+
+    # <editor-fold desc="Check whether the file should be processed">
+    if indexer == -1:
+        return False
+    if os.stat(text_path).st_size >= 2500000:
+        print("file too large", gutenberg_id, title)
+        return False
+    # </editor-fold>
+
+    # <editor-fold desc="Read text file">
+    try:
+        with open(text_path, "r",
+                  encoding="utf-8", errors="replace") as txt:
+            text = txt.readlines()
+            text = "".join(text)
+    except:
+        print(text_path, "exception")
+        return False
+    # </editor-fold>
+
+    # <editor-fold desc="Load Tagsets from Tagset_LANGUAGE.py">
     if language == "de":
         from Tagsets.Tagset_de import nouns_accept_tags, nouns_accept_tags_start_with, nouns_exclude_tags, nouns_exclude_tags_start_with
         from Tagsets.Tagset_de import pronouns_accept_tags, pronouns_accept_tags_start_with, pronouns_exclude_tags, pronouns_exclude_tags_start_with
@@ -50,11 +99,16 @@ def pipeline(text, language, w2v_model, tagger, df_affinity, affinity_score_labe
 
     else:
         print("Language not yet implemented - add Tagset_LANG.py file and import it in the pipline file.")
+        return False
+    # </editor-fold>
 
+
+    result_dict = {"Gutenberg_id": gutenberg_id, "Title": title, "Author": author, "Language": language}
+    
     print("#", end="")
     # <editor-fold desc="Preprocessing">
     segmented = split_at_charset(text=text, sep=["\n\n"])
-    wtl = [POS_tagger(tagger=tagger, document=i) for i in segmented]
+    wtl = [POS_tagger(tagger=tagger[indexer], document=i) for i in segmented]
     
     # # <editor-fold desc="ParagraphsAsBoW">
     # words_by_seg = [i[0] for i in wtl]
@@ -138,12 +192,13 @@ def pipeline(text, language, w2v_model, tagger, df_affinity, affinity_score_labe
     word_frequency_by_sentence_dict, word_frequency_by_document_dict = word_frequencies(lemma_by_sent=lemma_by_sentence)
     # </editor-fold>
 
+    sentiment_dict, sentiment_hitrate = sentiment_scores(frequency_dict_by_doc=word_frequency_by_document_dict, w2v_model=w2v_model[indexer])
+
 
     print("#", end="")
     # <editor-fold desc="Affinity Scores">
-    affinity_concretness_label = affinity_score_label
-    affinity_concretness_label.append(concreteness_label)
-    (dict_affinities_by_sent, hitrate_affinities) = affinity_conc_score(lemma_dict_by_sent=word_frequency_by_sentence_dict, df_affinity=df_affinity,
+    affinity_concretness_label = [*affinity_score_label[indexer], concreteness_label[indexer]]
+    (dict_affinities_by_sent, hitrate_affinities) = affinity_conc_score(lemma_dict_by_sent=word_frequency_by_sentence_dict, df_affinity=df_affinity[indexer],
                                                               affinity_conc_label=affinity_concretness_label, size_of_document=document_words)
     # </editor-fold>
 
@@ -158,8 +213,8 @@ def pipeline(text, language, w2v_model, tagger, df_affinity, affinity_score_labe
     mean_syllable_count = mean_of_list(syllables_list)
     log_word_freq, text_corpus_corr, unique_word_incidence = word_frequency(document_word_freq_dict=word_frequency_by_document_dict,
                                                                             document_size=document_sentences,
-                                                                            df_background_corpus_frequency=df_background_corpus_frequency,
-                                                                            background_corpus_size=background_corpus_size)
+                                                                            df_background_corpus_frequency=df_background_corpus_frequency[indexer],
+                                                                            background_corpus_size=background_corpus_size[indexer])
     
     result_dict = {**result_dict, **{"Mean word length": mean_word_length, "Mean syllable count": mean_syllable_count,
                                      "log word frequency": log_word_freq, "Vocabulary correlation": text_corpus_corr,
@@ -170,7 +225,7 @@ def pipeline(text, language, w2v_model, tagger, df_affinity, affinity_score_labe
     print("#", end="")
     # <editor-fold desc="Lexical Word Level">
 
-    mean_concreteness_score = mean_concreteness(concreteness_label=concreteness_label, affinity_conc_dict=dict_affinities_by_sent)
+    mean_concreteness_score = mean_concreteness(concreteness_label=concreteness_label[indexer], affinity_conc_dict=dict_affinities_by_sent)
 
     result_dict = {**result_dict, **{"Mean Concretness Score": mean_concreteness_score, "Hitrate Affinity Scores": hitrate_affinities}}
     
@@ -232,7 +287,7 @@ def pipeline(text, language, w2v_model, tagger, df_affinity, affinity_score_labe
 
     logical_incidence_score = logical_incidence(tagsets_by_doc=tagsets_by_doc, tagset_name="Logical", doc_words=document_words)
     
-    connective_incidence_scores = connective_incidence(lemma=lemma, df_connective=df_connective, connective_type_label=connective_type_label)
+    connective_incidence_scores = connective_incidence(lemma=lemma, df_connective=df_connective[indexer], connective_type_label=connective_type_label[indexer])
 
     
     FRE = Flescher_Reading_Ease(document_words=words, document_syllables=syllables_list,
@@ -267,25 +322,35 @@ def pipeline(text, language, w2v_model, tagger, df_affinity, affinity_score_labe
                                       tagset_name_present="Present")
     
     
-    mean_sentiment_shift, mean_sentiment_hitrate = sentiment_shift(w2v_model=w2v_model, lemma_by_segment=lemma_by_sentence,
-                                                                   tags_by_segment=tags_by_sentence,
-                                                                   accept_tags=nouns_accept_tags,
-                                                                   accept_tags_start_with=nouns_accept_tags_start_with,
-                                                                   exclude_tags=nouns_exclude_tags,
-                                                                   exclude_tags_start_with=nouns_exclude_tags_start_with)
+    mean_sentiment_shift = sentiment_shift(tagset_by_sent=tagsets_by_sent_dict, tagset_name="Noun", sentiment_dict=sentiment_dict)
     
-    affinity_shift_scores = affinity_shift(affinity_score_dict=dict_affinities_by_sent, affinity_label=affinity_score_label)
+    affinity_shift_scores = affinity_shift(affinity_score_dict=dict_affinities_by_sent, affinity_label=affinity_score_label[indexer])
     
     result_dict = {**result_dict,  **{"Noun overlap": nouns_overlap, "Pronoun overlap": pronouns_overlap,
                                                               "Noun Pronoun Overlap": noun_pronouns_overlap,
                                      "Verb Overlap": verbs_overlap, "Adverb Overlap": adverbs_overlap, "Adjective Overlap": adjectives_overlap,
                                                               "All Word Overlap": all_words_overlap,
-                                     "Mean sentiment shift": mean_sentiment_shift, "Hitrate sentiment shift": mean_sentiment_hitrate,
+                                     "Mean sentiment shift": mean_sentiment_shift, "Hitrate sentiment shift": sentiment_hitrate,
                                       "Mean tense changes": mean_tense_changes},
                    **affinity_shift_scores,
                    }
-    print(result_dict)
     # </editor-fold>
     
-    
-    return result_dict
+    # <editor-fold desc="Write results to target file">
+    if os.path.isfile(target_path):
+        with open(target_path, "a") as file:
+            writer = csv.DictWriter(file, fieldnames=sorted([k for k, v in result_dict.items()]),
+                                    delimiter="\t",
+                                    lineterminator="\n")
+            writer.writerow(result_dict)
+    else:
+        with open(target_path, "w") as file:
+            writer = csv.DictWriter(file, fieldnames=sorted([k for k, v in result_dict.items()]),
+                                    delimiter="\t",
+                                    lineterminator="\n")
+            writer.writeheader()
+            writer.writerow(result_dict)
+    # </editor-fold>
+
+    print("#", datetime.datetime.now())
+    return True

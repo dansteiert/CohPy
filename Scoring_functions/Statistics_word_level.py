@@ -43,25 +43,6 @@ def word_frequency(document_word_freq_dict, df_background_corpus_frequency, docu
     :return: int
     '''
 
-    # freq_in_corpus = []
-    # word_familarity = []
-    # for k, v in document_word_freq_dict.items():
-        # try:
-        #     temp_row = df_background_corpus_frequency.query(expr="index == '%s'" % k)
-        # except:
-        #     continue
-        # if temp_row.shape[0] > 0:
-        #     try:
-        #         freq_in_corpus.append(np.log10(float(temp_row.loc[k, "frequency"]) / background_corpus_size))
-        #         word_familarity.append(np.log10(v/document_size * (float(temp_row.loc[k, "frequency"]) / background_corpus_size)))
-        #     except:
-        #         freq_in_corpus.append(min_freq)
-        #         word_familarity.append(v/document_size * min_freq)
-        # else:
-        #     freq_in_corpus.append(min_freq)
-        #     word_familarity.append(v / document_size * min_freq)
-
-
     freq_in_corpus = {k: float(df_background_corpus_frequency.get(k, {}).get(frequency_name, 1)) / background_corpus_size for k, v in document_word_freq_dict.items()}
     freq_in_document = {k: (v / document_size) * (float(freq_in_corpus.get(k, 1)) / background_corpus_size) for k, v in document_word_freq_dict.items()}
 
@@ -69,12 +50,8 @@ def word_frequency(document_word_freq_dict, df_background_corpus_frequency, docu
     text_freq = np.array([np.log10(v) for v in freq_in_document.values()])
     corr_matrix = np.corrcoef(x=corpus_freq, y=text_freq)
     unique_words = [True for v in document_word_freq_dict.values() if v == 1]
-    # print(freq_in_corpus)
-    # print(freq_in_document)
-    # print(corpus_freq)
-    # print(text_freq)
-    # print(corr_matrix)
-    if document_size > 0:
+
+    try:
         return mean_of_list(corpus_freq), corr_matrix[0, 1], len(unique_words)/len(freq_in_corpus)
-    else:
-        return mean_of_list(corpus_freq), corr_matrix[0, 1], len(unique_words)
+    except:
+        return None, None, None

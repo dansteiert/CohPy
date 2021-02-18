@@ -19,46 +19,21 @@ def load_w2v(path_to_model):
     return w2v
 
 
-def sentence_similarity(w2v, sent_a_lemma, sent_a_tags, sent_b_lemma, sent_b_tags,
-                        accept_tags=[], accept_tags_start_with=[],
-                        exclude_tags=[], exclude_tags_start_with=[]):
-    vec_a, hit_a, searched_a = sentence_vector_avg(w2v=w2v, lemma=sent_a_lemma, tags=sent_a_tags,
-                        accept_tags=accept_tags, accept_tags_start_with=accept_tags_start_with,
-                        exclude_tags=exclude_tags, exclude_tags_start_with=exclude_tags_start_with)
-    vec_b, hit_b, searched_b = sentence_vector_avg(w2v=w2v, lemma=sent_b_lemma, tags=sent_b_tags,
-                        accept_tags=accept_tags, accept_tags_start_with=accept_tags_start_with,
-                        exclude_tags=exclude_tags, exclude_tags_start_with=exclude_tags_start_with)
+def sentence_similarity(sent_a_dict, sent_b_dict, sentiment_dict):
+    vec_a_list = [v * sentiment_dict.get(k, 0) for k, v in sent_a_dict if k in sentiment_dict.keys()]
+    vec_b_list = [v * sentiment_dict.get(k, 0) for k, v in sent_b_dict if k in sentiment_dict.keys()]
+    vec_a = np.add.reduce(vec_a_list)
+    vec_b = np.add.reduce(vec_b_list)
+
     similarity = spatial.distance.cosine(vec_a, vec_b)
-    if searched_a == 0 or searched_b == 0:
-
-        return 0, 0
     if similarity != similarity:
-        if hit_a == 0 or hit_b == 0:
-            return 0, 0
-        return 0, 0
-    hit_ratio = ((hit_a/searched_a) + (hit_b/searched_b))/2
-    return similarity, hit_ratio
+        return None
+    return similarity
 
 
-def sentence_vector_avg(w2v, lemma, tags,
-                        accept_tags=[], accept_tags_start_with=[],
-                        exclude_tags=[], exclude_tags_start_with=[]):
-    hit = 0
-    searched = 0
-    try:
-        sent_a_vec = np.zeros((w2v.vector_size,), dtype="float32")
-    except:
-        print("No w2v model given!")
-        return 0, 0, 0
-    for l_a, t_a in zip(lemma, tags):
-        if check_tags(tag=t_a, accept_tags=accept_tags, accept_tags_start_with=accept_tags_start_with,
-                      exclude_tags=exclude_tags, exclude_tags_start_with=exclude_tags_start_with):
-            if l_a not in w2v.vocab:
-                searched += 1
-                continue
-            searched += 1
-            hit += 1
-            sent_a_vec = np.add(sent_a_vec, w2v.get_vector(l_a))
-            if hit > 0:
-                sent_a_vec = np.divide(sent_a_vec, hit)
-    return sent_a_vec, hit, searched
+def sentiment_scores(frequency_dict_by_doc, w2v_model):
+    if w2v_model is None:
+        return None, None
+    senti_dict = {k: w2v_model.get_vector(k) for k in frequency_dict_by_doc.keys() if k  in w2v_model.vocab}
+    hitrate = len(senti_dict)/len(frequency_dict_by_doc)
+    return senti_dict, hitrate

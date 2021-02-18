@@ -2,8 +2,7 @@ from Helper.Helper_functions import mean_of_list, search_tag_set
 from Helper.w2v_model import sentence_similarity
 import numpy as np
 
-def sentiment_shift(w2v_model, lemma_by_segment, tags_by_segment, accept_tags=[], accept_tags_start_with=[],
-                             exclude_tags=[], exclude_tags_start_with=[]):
+def sentiment_shift(tagset_by_sent, tagset_name, sentiment_dict):
     '''
     Ref: Crossley2019 - Semantic similarity features
     :param w2v_model:
@@ -15,25 +14,22 @@ def sentiment_shift(w2v_model, lemma_by_segment, tags_by_segment, accept_tags=[]
     :param exclude_tags_start_with:
     :return:
     '''
-    if w2v_model is None:
-        return 0, 0
+    if sentiment_dict is None:
+        return 0
     
-    v =[]
-    hit_ratio = []
-    for index_a, (l_a, t_a) in enumerate(zip(lemma_by_segment, tags_by_segment)):
-        if index_a + 1 >= len(lemma_by_segment):
+    tagset = tagset_by_sent.get(tagset_name, [])
+    if len(tagset) == 0:
+        print("Empty tagset for ", tagset_name)
+    v = []
+    for index_a, tagset_sent in enumerate(tagset):
+        if index_a + 1 >= len(tagset):
             continue
-        v_temp, hr_temp = sentence_similarity(w2v=w2v_model, sent_a_lemma=l_a, sent_a_tags=t_a,
-                                                     sent_b_lemma=lemma_by_segment[index_a + 1],
-                                                     sent_b_tags=tags_by_segment[index_a + 1], accept_tags=accept_tags,
-                                                     accept_tags_start_with=accept_tags_start_with,
-                                                     exclude_tags=exclude_tags,
-                                                     exclude_tags_start_with=exclude_tags_start_with)
-        if v_temp == 0 and hr_temp == 0:
+
+        v_temp = sentence_similarity(sent_a_dict=tagset_sent, sent_b_dict=tagset[index_a + 1], sentiment_dict=sentiment_dict)
+        if v_temp is None:
             continue
         v.append(v_temp)
-        hit_ratio.append(hr_temp)
-    return (mean_of_list(v), mean_of_list(hit_ratio))
+    return mean_of_list(v)
 
 
 def tag_overlap(tagset_by_sent, tagset_name):
