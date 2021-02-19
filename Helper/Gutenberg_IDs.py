@@ -91,19 +91,12 @@ Arthur_Conan_Doyle = [108, 126, 139, 221, 244, 290, 294, 355, 356, 423, 439, 537
                       22357, 23059, 24951, 26153, 28733, 29392, 29490, 30933, 32536, 32777, 34079, 34627, 34797, 35348,
                       36453, 37712, 38071, 38443, 39718, 40848, 42127, 45335, 47506, 48320, 49584, 49702, 51818, 52099,
                       52253, 52677, 52678, 54109, 54158, 54933, 56573, 58574, 59809, 61237]
-Non_gutenberg_ids_easy = [-1, -3, -4, -5, -6, -7]
+Non_gutenberg_ids_easy = [-1]
 Non_gutenberg_ids_difficult = [-2]
 
-# ID_collection = []
-# for i in [James_joyce, Leo_Tolstoy, Moby_Dick, Thomas_Mann, Heinrich_von_Kleist, J_W_v_Goethe, Franz_Kafka, Grimm,
-#           Alaeddin, Arabian_nights, Burrgoughs_Tarzan, Wizard_of_Oz, Defoe_Robinson_Crusoe, Barrie_Peter_Pan, Mark_Twain,
-#           Karl_May, Robert_Louise_Stevenson, Johanna_Spyri, Emmy_von_Rhoden, Carlo_Collodi, Lewis_Carroll, Rudyard_Kipling,
-#           Heinrich_Hoffmann, Grahame_Kenneth, Bassewitz, Arthur_Conan_Doyle]:
-#     ID_collection.extend(i)
-ID_collection = []
-for i in [
-          Karl_May, Robert_Louise_Stevenson, Johanna_Spyri, Emmy_von_Rhoden, Carlo_Collodi, Lewis_Carroll, Rudyard_Kipling,
-          Heinrich_Hoffmann, Grahame_Kenneth, Bassewitz, Arthur_Conan_Doyle]:
-    ID_collection.extend(i)
+ID_collection = [*James_joyce, *Leo_Tolstoy, *Moby_Dick, *Thomas_Mann, *Heinrich_von_Kleist, *J_W_v_Goethe, *Franz_Kafka, *Grimm,
+          *Alaeddin, *Arabian_nights, *Burrgoughs_Tarzan, *Wizard_of_Oz, *Defoe_Robinson_Crusoe, *Barrie_Peter_Pan, *Mark_Twain,
+          *Karl_May, *Robert_Louise_Stevenson, *Johanna_Spyri, *Emmy_von_Rhoden, *Carlo_Collodi, *Lewis_Carroll, *Rudyard_Kipling,
+          *Heinrich_Hoffmann, *Grahame_Kenneth, *Bassewitz, *Arthur_Conan_Doyle]
 
 

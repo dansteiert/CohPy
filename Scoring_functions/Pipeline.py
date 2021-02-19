@@ -1,17 +1,17 @@
 from Helper.Helper_functions import mean_of_list, split_at_charset, split_into_sentences, POS_tagger, sort_by_POS_tags, word_frequencies
-from Scoring_functions.Lexical_word_level import affinity_conc_score, mean_concreteness
+from Scoring_functions.Lexical_word_level import affective_conc_score, mean_concreteness
 from Scoring_functions.Statistics_word_level import word_length, syllable_count, word_frequency
 from Scoring_functions.Statistics_sentence_level import mean_tags_by_sentence, stat_sentence_length
 from Scoring_functions.Lexical_sentence_level import type_token_ratio, lexical_diversity, ratio_tags_a_to_tags_b
 from Scoring_functions.Statistics_document_level import logical_incidence, connective_incidence, unique_lemma, Flescher_Kincaid_Grade_Level, Flescher_Reading_Ease
-from Scoring_functions.Cohesion_Sentence_Sentence import tag_overlap, sentiment_shift, affinity_shift, tense_change
+from Scoring_functions.Cohesion_Sentence_Sentence import tag_overlap, sentiment_shift, affective_shift, tense_change
 from Helper.w2v_model import sentiment_scores
 import os
 import csv
 import datetime
 import numpy as np
 
-def pipeline(text_path, language, language_order, w2v_model, tagger, df_affinity, affinity_score_label, concreteness_label,
+def pipeline(text_path, language, language_order, w2v_model, tagger, df_affective, affective_score_label, concreteness_label,
              df_background_corpus_frequency, background_corpus_size, df_connective, connective_type_label, target_path,
              title, author, gutenberg_id, gutenberg_meta_dict_elem=None):
     
@@ -39,13 +39,17 @@ def pipeline(text_path, language, language_order, w2v_model, tagger, df_affinity
     # </editor-fold>
     
     # indexer to determine language specific dependencies
-    indexer = language_order.index(language)
-
-    # <editor-fold desc="Check whether the file should be processed">
-    if indexer == -1:
+    try:
+        indexer = language_order.index(language)
+    except:
+        print("language not implemented", language)
         return False
-    if os.stat(text_path).st_size >= 2500000:
-        print("file too large", gutenberg_id, title)
+    # <editor-fold desc="Check whether the file should be processed">
+    try:
+        if os.stat(text_path).st_size >= 2500000:
+            print("file too large", gutenberg_id, title)
+            return False
+    except:
         return False
     # </editor-fold>
 
@@ -105,7 +109,7 @@ def pipeline(text_path, language, language_order, w2v_model, tagger, df_affinity
 
     result_dict = {"Gutenberg_id": gutenberg_id, "Title": title, "Author": author, "Language": language}
     
-    print("#", end="")
+    print(title, ": #", end="")
     # <editor-fold desc="Preprocessing">
     segmented = split_at_charset(text=text, sep=["\n\n"])
     wtl = [POS_tagger(tagger=tagger[indexer], document=i) for i in segmented]
@@ -196,10 +200,10 @@ def pipeline(text_path, language, language_order, w2v_model, tagger, df_affinity
 
 
     print("#", end="")
-    # <editor-fold desc="Affinity Scores">
-    affinity_concretness_label = [*affinity_score_label[indexer], concreteness_label[indexer]]
-    (dict_affinities_by_sent, hitrate_affinities) = affinity_conc_score(lemma_dict_by_sent=word_frequency_by_sentence_dict, df_affinity=df_affinity[indexer],
-                                                              affinity_conc_label=affinity_concretness_label, size_of_document=document_words)
+    # <editor-fold desc="affective Scores">
+    affective_concretness_label = [*affective_score_label[indexer], concreteness_label[indexer]]
+    (dict_affinities_by_sent, hitrate_affinities) = affective_conc_score(lemma_dict_by_sent=word_frequency_by_sentence_dict, df_affective=df_affective[indexer],
+                                                              affective_conc_label=affective_concretness_label, size_of_document=document_words)
     # </editor-fold>
 
 
@@ -225,9 +229,9 @@ def pipeline(text_path, language, language_order, w2v_model, tagger, df_affinity
     print("#", end="")
     # <editor-fold desc="Lexical Word Level">
 
-    mean_concreteness_score = mean_concreteness(concreteness_label=concreteness_label[indexer], affinity_conc_dict=dict_affinities_by_sent)
+    mean_concreteness_score = mean_concreteness(concreteness_label=concreteness_label[indexer], affective_conc_dict=dict_affinities_by_sent)
 
-    result_dict = {**result_dict, **{"Mean Concretness Score": mean_concreteness_score, "Hitrate Affinity Scores": hitrate_affinities}}
+    result_dict = {**result_dict, **{"Mean Concretness Score": mean_concreteness_score, "Hitrate affective Scores": hitrate_affinities}}
     
     # </editor-fold>
 
@@ -236,13 +240,15 @@ def pipeline(text_path, language, language_order, w2v_model, tagger, df_affinity
     
     (mean_sent_length, max_sentence_length) = stat_sentence_length(lemma_by_sent=lemma_by_sentence)
     
-    mean_punctuations = mean_tags_by_sentence(tagsets_by_doc=tagsets_by_doc, tagset_name="Punctuations", document_sentence=document_sentences)
-    
-    mean_conjunctions = mean_tags_by_sentence(tagsets_by_doc=tagsets_by_doc, tagset_name="Conjunctions", document_sentence=document_sentences)
-    
-    mean_pronouns = mean_tags_by_sentence(tagsets_by_doc=tagsets_by_doc, tagset_name="Pronoun", document_sentence=document_sentences)
-    
-    mean_articles = mean_tags_by_sentence(tagsets_by_doc=tagsets_by_doc, tagset_name="Article", document_sentence=document_sentences)
+    mean_punctuations, mean_conjunctions, mean_pronouns, mean_articles = [mean_tags_by_sentence(tagsets_by_doc=tagsets_by_doc, tagset_name=tagset, document_sentence=document_sentences)
+                                                                           for tagset in ["Punctuations", "Conjunctions", "Pronoun", "Article"]]
+    # mean_punctuations = mean_tags_by_sentence(tagsets_by_doc=tagsets_by_doc, tagset_name="Punctuations", document_sentence=document_sentences)
+    #
+    # mean_conjunctions = mean_tags_by_sentence(tagsets_by_doc=tagsets_by_doc, tagset_name="Conjunctions", document_sentence=document_sentences)
+    #
+    # mean_pronouns = mean_tags_by_sentence(tagsets_by_doc=tagsets_by_doc, tagset_name="Pronoun", document_sentence=document_sentences)
+    #
+    # mean_articles = mean_tags_by_sentence(tagsets_by_doc=tagsets_by_doc, tagset_name="Article", document_sentence=document_sentences)
     
     unique_content_incidence = unique_lemma(tagsets_by_doc=tagsets_by_doc, tagset_name="Content", document_sentences=document_sentences)
 
@@ -261,23 +267,27 @@ def pipeline(text_path, language, language_order, w2v_model, tagger, df_affinity
 
     
     # <editor-fold desc="Ratio Scores">
-    type_token_ratio_nouns = type_token_ratio(tagsets_by_doc=tagsets_by_doc, tagset_name="Noun")
-    type_token_ratio_noun_pronoun = type_token_ratio(tagsets_by_doc=tagsets_by_doc, tagset_name="Pronoun")
-    type_token_ratio_pronoun = type_token_ratio(tagsets_by_doc=tagsets_by_doc, tagset_name="Noun and Pronoun")
-    type_token_ratio_adverbs = type_token_ratio(tagsets_by_doc=tagsets_by_doc, tagset_name="Adverb")
-    type_token_ratio_adjectives = type_token_ratio(tagsets_by_doc=tagsets_by_doc, tagset_name="Adjective")
-    type_token_ratio_verbs = type_token_ratio(tagsets_by_doc=tagsets_by_doc, tagset_name="Verb")
-    type_token_ratio_all_tags = type_token_ratio(tagsets_by_doc=tagsets_by_doc, tagset_name="all")
+    ttr_nouns, ttr_noun_pronoun, ttr_pronoun, ttr_adverbs, ttr_adjectives, ttr_verbs, ttr_all_tags = [type_token_ratio(tagsets_by_doc=tagsets_by_doc, tagset_name=tagset)
+                                                                                                      for tagset in ["Noun", "Pronoun", "Noun and Pronoun", "Adverb",
+                                                                                                                     "Adjective", "Verb", "all"]]
+    
+    # type_token_ratio_nouns = type_token_ratio(tagsets_by_doc=tagsets_by_doc, tagset_name="Noun")
+    # type_token_ratio_noun_pronoun = type_token_ratio(tagsets_by_doc=tagsets_by_doc, tagset_name="Pronoun")
+    # type_token_ratio_pronoun = type_token_ratio(tagsets_by_doc=tagsets_by_doc, tagset_name="Noun and Pronoun")
+    # type_token_ratio_adverbs = type_token_ratio(tagsets_by_doc=tagsets_by_doc, tagset_name="Adverb")
+    # type_token_ratio_adjectives = type_token_ratio(tagsets_by_doc=tagsets_by_doc, tagset_name="Adjective")
+    # type_token_ratio_verbs = type_token_ratio(tagsets_by_doc=tagsets_by_doc, tagset_name="Verb")
+    # type_token_ratio_all_tags = type_token_ratio(tagsets_by_doc=tagsets_by_doc, tagset_name="all")
     
     
 
     # </editor-fold>
     mean_lexical_diversity = lexical_diversity(word_frequency_dict=word_frequency_by_document_dict, document_sentences=document_sentences)
     result_dict = {**result_dict, **{"Pronoun-noun ratio": pronoun_noun_ratio, "Content word-functional word ratio": cont_func_ratio,
-                                     "Type-token ratio nouns": type_token_ratio_nouns, "Type-token ratio verbs": type_token_ratio_verbs,
-                                     "Type-token ratio adverbs": type_token_ratio_adverbs, "Type-token ratio adjectives": type_token_ratio_adjectives,
-                                     "Type-token ratio all words": type_token_ratio_all_tags, "Type-token ratio pronouns": type_token_ratio_pronoun},
-                                    "Type-token ratio noun and pronoun": type_token_ratio_noun_pronoun, "Adjective Verb Quotient": adjective_verb_quotien,
+                                     "Type-token ratio nouns": ttr_nouns, "Type-token ratio verbs": ttr_verbs,
+                                     "Type-token ratio adverbs": ttr_adverbs, "Type-token ratio adjectives": ttr_adjectives,
+                                     "Type-token ratio all words": ttr_all_tags, "Type-token ratio pronouns": ttr_pronoun},
+                                    "Type-token ratio noun and pronoun": ttr_noun_pronoun, "Adjective Verb Quotient": adjective_verb_quotien,
                    "Mean lexical diversity per sentence": mean_lexical_diversity
                    }
     # </editor-fold>
@@ -302,21 +312,25 @@ def pipeline(text_path, language, language_order, w2v_model, tagger, df_affinity
 
     print("#", end="")
     # <editor-fold desc="Cohesion_Sentence_Sentence">
-    # <editor-fold desc="Overlaps">
-    nouns_overlap = tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name="Noun")
     
-    pronouns_overlap = tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name="Pronoun")
-    
-    noun_pronouns_overlap = tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name="Noun and Pronoun")
-    
-    adverbs_overlap = tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name="Adverb")
-    
-    adjectives_overlap = tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name="Adjective")
-    
-    verbs_overlap = tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name="Verb")
-        
-    all_words_overlap = tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name="all")
-    # </editor-fold>
+    nouns_overlap, pronouns_overlap, noun_pronouns_overlap, adverbs_overlap, adjectives_overlap, verbs_overlap, all_words_overlap = [tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name=tagset)
+                                                                                                                                   for tagset in ["Noun", "Pronoun", "Noun and Pronoun", "Adverb",
+                                                                                                                     "Adjective", "Verb", "all"]]
+    # # <editor-fold desc="Overlaps">
+    # nouns_overlap = tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name="Noun")
+    #
+    # pronouns_overlap = tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name="Pronoun")
+    #
+    # noun_pronouns_overlap = tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name="Noun and Pronoun")
+    #
+    # adverbs_overlap = tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name="Adverb")
+    #
+    # adjectives_overlap = tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name="Adjective")
+    #
+    # verbs_overlap = tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name="Verb")
+    #
+    # all_words_overlap = tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name="all")
+    # # </editor-fold>
     
     mean_tense_changes = tense_change(tagset_by_sent=tagsets_by_sent_dict, tagset_name_past="Past",
                                       tagset_name_present="Present")
@@ -324,7 +338,7 @@ def pipeline(text_path, language, language_order, w2v_model, tagger, df_affinity
     
     mean_sentiment_shift = sentiment_shift(tagset_by_sent=tagsets_by_sent_dict, tagset_name="Noun", sentiment_dict=sentiment_dict)
     
-    affinity_shift_scores = affinity_shift(affinity_score_dict=dict_affinities_by_sent, affinity_label=affinity_score_label[indexer])
+    affective_shift_scores = affective_shift(affective_score_dict=dict_affinities_by_sent, affective_label=affective_score_label[indexer])
     
     result_dict = {**result_dict,  **{"Noun overlap": nouns_overlap, "Pronoun overlap": pronouns_overlap,
                                                               "Noun Pronoun Overlap": noun_pronouns_overlap,
@@ -332,7 +346,7 @@ def pipeline(text_path, language, language_order, w2v_model, tagger, df_affinity
                                                               "All Word Overlap": all_words_overlap,
                                      "Mean sentiment shift": mean_sentiment_shift, "Hitrate sentiment shift": sentiment_hitrate,
                                       "Mean tense changes": mean_tense_changes},
-                   **affinity_shift_scores,
+                   **affective_shift_scores,
                    }
     # </editor-fold>
     

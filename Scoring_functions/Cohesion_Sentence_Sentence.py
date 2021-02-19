@@ -63,31 +63,31 @@ def tag_overlap(tagset_by_sent, tagset_name):
     return mean_of_list(v)
 
 
-def affinity_shift(affinity_score_dict, affinity_label):
+def affective_shift(affective_score_dict, affective_label):
     
     '''
     Ref: Jacobs2018
-    Calculate with the Affinity scores, by sentence, their absolute affinity shift, for adjacent sentences, per affinity_label element
-    :param affinity_score_dict: dict{affinity label: list[sentence list[affinity values per lemma]]}
-    :param affinity_label: list, of affinity value names
-    :return: dict, {key=affinity_labels: value=float, mean absolute difference of pairwise sentence affinity}
+    Calculate with the affective scores, by sentence, their absolute affective shift, for adjacent sentences, per affective_label element
+    :param affective_score_dict: dict{affective label: list[sentence list[affective values per lemma]]}
+    :param affective_label: list, of affective value names
+    :return: dict, {key=affective_labels: value=float, mean absolute difference of pairwise sentence affective}
     '''
     aff_shift_score = {}
     
-    # Iterate over all affinity_labels
-    for aff_lab in affinity_label:
+    # Iterate over all affective_labels
+    for aff_lab in affective_label:
         aff_shift = []
-        aff_by_sent = affinity_score_dict.get(aff_lab, [])
+        aff_by_sent = affective_score_dict.get(aff_lab, [])
         
-        # calculate pairwise affinity distance
+        # calculate pairwise affective distance
         for sent_index, aff_list in enumerate(aff_by_sent):
             if sent_index + 1 >= len(aff_by_sent):
                 continue
             aff_shift.append(abs(sum(aff_list) - sum(aff_by_sent[sent_index + 1])))
         aff_shift_score[aff_lab] = mean_of_list(aff_shift)
         
-    # Label affinity shift scores for final table
-    aff_shift_score = {"Affinity shift " + str(k): v for k, v in aff_shift_score.items()}
+    # Label affective shift scores for final table
+    aff_shift_score = {"affective shift " + str(k): v for k, v in aff_shift_score.items()}
     return aff_shift_score
 
 
