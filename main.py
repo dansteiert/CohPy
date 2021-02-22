@@ -32,11 +32,11 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
                          os.path.join(os.getcwd(), "data", "Score files", "Connectives_de.csv")),
          connective_separator=(",", ","), connective_identifier=("WORD", "WORD"),
          connective_label=("Connective Type", "Connective Type"),
-         run_Gutenberg=True, target_path_full_gutenberg=os.path.join(os.getcwd(), "data", "score_collection_full_gutenberg.tsv"),
+         run_Gutenberg=False, target_path_full_gutenberg=os.path.join(os.getcwd(), "data", "score_collection_full_gutenberg.tsv"),
          selected_Gutenberg=True, target_path_selected_gutenberg=os.path.join(os.getcwd(), "data", "score_collection_selected_gutenberg.tsv"),
          run_extra_books=False, target_path_extra_books=os.path.join(os.getcwd(), "data", "score_collection_extra_books.tsv"),
          file_path_extra_books=os.path.join(os.getcwd(), "data", "Extra_books"),
-         run_new_documents=False, target_path_new_documents=os.path.join(os.getcwd(), "data", "score_collection_new_documents.tsv"),
+         run_new_documents=True, target_path_new_documents=os.path.join(os.getcwd(), "data", "score_collection_new_documents.tsv"),
          file_path_new_documents=os.path.join(os.getcwd(), "data", "New_documents")):
     
     print(datetime.datetime.now(), "Start Readability Calculations")

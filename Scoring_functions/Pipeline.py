@@ -14,6 +14,26 @@ import numpy as np
 def pipeline(text_path, language, language_order, w2v_model, tagger, df_affective, affective_score_label, concreteness_label,
              df_background_corpus_frequency, background_corpus_size, df_connective, connective_type_label, target_path,
              title, author, gutenberg_id, gutenberg_meta_dict_elem=None):
+    '''
+    :param text_path: str, Path to .txt file with text to be processed
+    :param language: str, language of the text
+    :param language_order: list, define position for language specific dependencies
+    :param w2v_model: list, w2v_model, in order of the language_order
+    :param tagger:  list, tagger, in order of the language_order
+    :param df_affective:  list, affective scores, in order of the language_order
+    :param affective_score_label:  list, list of affective labels, in order of the language_order
+    :param concreteness_label:  list, concreteness labels, in order of the language_order
+    :param df_background_corpus_frequency:  list, word frequencies of background corpus, in order of the language_order
+    :param background_corpus_size:  list, size of background corpus (in sentences), in order of the language_order
+    :param df_connective:  list, connective words with type label, in order of the language_order
+    :param connective_type_label:  list, connective word type labels, in order of the language_order
+    :param target_path:  str, path, where results are to be saved
+    :param title: str, title of the book
+    :param author: str author of the book
+    :param gutenberg_id: str, id of the book
+    :param gutenberg_meta_dict_elem: dict, meta data of the gutenberg corpus
+    :return: None, results are written to target_path
+    '''
     
     # <editor-fold desc="Get Gutenberg Metadata">
     if gutenberg_meta_dict_elem is not None:
@@ -114,12 +134,6 @@ def pipeline(text_path, language, language_order, w2v_model, tagger, df_affectiv
     segmented = split_at_charset(text=text, sep=["\n\n"])
     wtl = [POS_tagger(tagger=tagger[indexer], document=i) for i in segmented]
     
-    # # <editor-fold desc="ParagraphsAsBoW">
-    # words_by_seg = [i[0] for i in wtl]
-    # tags_by_seg = [i[1] for i in wtl]
-    # lemma_by_seg = [i[2] for i in wtl]
-    # # </editor-fold>
-    
     # <editor-fold desc="DocAsBoW">
     words = [j for i in wtl for j in i[0]]
     tags = [j for i in wtl for j in i[1]]
@@ -205,9 +219,6 @@ def pipeline(text_path, language, language_order, w2v_model, tagger, df_affectiv
     (dict_affinities_by_sent, hitrate_affinities) = affective_conc_score(lemma_dict_by_sent=word_frequency_by_sentence_dict, df_affective=df_affective[indexer],
                                                               affective_conc_label=affective_concretness_label, size_of_document=document_words)
     # </editor-fold>
-
-
-    
     # </editor-fold>
     
     print("#", end="")
@@ -242,13 +253,6 @@ def pipeline(text_path, language, language_order, w2v_model, tagger, df_affectiv
     
     mean_punctuations, mean_conjunctions, mean_pronouns, mean_articles = [mean_tags_by_sentence(tagsets_by_doc=tagsets_by_doc, tagset_name=tagset, document_sentence=document_sentences)
                                                                            for tagset in ["Punctuations", "Conjunctions", "Pronoun", "Article"]]
-    # mean_punctuations = mean_tags_by_sentence(tagsets_by_doc=tagsets_by_doc, tagset_name="Punctuations", document_sentence=document_sentences)
-    #
-    # mean_conjunctions = mean_tags_by_sentence(tagsets_by_doc=tagsets_by_doc, tagset_name="Conjunctions", document_sentence=document_sentences)
-    #
-    # mean_pronouns = mean_tags_by_sentence(tagsets_by_doc=tagsets_by_doc, tagset_name="Pronoun", document_sentence=document_sentences)
-    #
-    # mean_articles = mean_tags_by_sentence(tagsets_by_doc=tagsets_by_doc, tagset_name="Article", document_sentence=document_sentences)
     
     unique_content_incidence = unique_lemma(tagsets_by_doc=tagsets_by_doc, tagset_name="Content", document_sentences=document_sentences)
 

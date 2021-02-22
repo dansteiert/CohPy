@@ -1,6 +1,6 @@
 import json, os,wget
 
-
+# TODO: write what functions do
 def load_gutenberg(path):
     with open(path, "r") as f:
         data = json.load(f)
