@@ -14,9 +14,9 @@ from sklearn.feature_selection import f_regression, SelectKBest, mutual_info_reg
 import os
 import csv
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 def continuous_prediction(target_path = os.path.join(os.getcwd(), "data", "ML Results", "Regression_data.csv")):
-    target_path = os.path.join(os.getcwd(), "data", "ML Results", "Regression_data.csv")
     df = pd.read_csv(target_path, delimiter=',', encoding="ISO-8859-1", index_col=0)
     # df = pd.DataFrame(df)
     
@@ -148,3 +148,14 @@ def model_trainer(X_data, Y_data, iteration):
 # best_model, best_r2 = model_trainer(ZVV_X_data, ZVV_Y_data, 100)
 # print(best_r2)
 continuous_prediction()
+
+def Regression_evaluation(target_path = os.path.join(os.getcwd(), "data", "ML Results", "Regression_results_backup.tsv")):
+    df = pd.read_csv(target_path, sep="\t")
+    df[["k", "score"]] = df[["k", "score"]].apply(pd.to_numeric, errors='coerce')
+    g = sns.catplot(x="k", y="score", hue="Regressor", row="Dataset name",
+                    sharey = False, sharex = True, data = df, kind = "bar", aspect = 4, height = 3,
+                    legend_out = False, ci = None)
+    g.add_legend(bbox_to_anchor=(1.05, 0), loc=3, borderaxespad=0.)
+    plt.xticks(rotation=90)
+    plt.tight_layout()
+    plt.savefig(os.path.join(os.getcwd(), "data", "ML Results", "Regression_results.png"), dpi=400)

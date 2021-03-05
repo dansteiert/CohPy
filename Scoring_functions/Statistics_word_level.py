@@ -3,21 +3,21 @@ import numpy as np
 
 
 def word_length(document_word):
-    '''
+    """
     Ref: Pitler08 - Baseline measures
     :param document: List of tokenized entries
     :return: length for each entry in the list
-    '''
+    """
     return mean_of_list([len(i) for i in document_word])
 
 
 def syllable_count(document_words):
-    '''
+    """
     Ref: Needed for Flescher_Reading_Ease, Flescher_Kincaid_Grade_Level
     Heuristical approximation
     :param document: List of tokenized entries
     :return: Syllable count for each entry in the list
-    '''
+    """
     syllable_list = []
     for i in document_words:
         count = 0
@@ -36,7 +36,7 @@ def syllable_count(document_words):
 
 
 def word_frequency(document_word_freq_dict, document_size, df_background_corpus_frequency, background_corpus_size=1000000, frequency_name="frequency"):
-    '''
+    """
     Ref: CohMetrix - Grasser2004 - Word Frequency
     Ref: Pitler08 - Vocabulary -> log likelihood of an article: sum C(w) * log(P(w|M)); C(w) count of word; P(w|M) probability of w occuring in M; M is the background Corpus
     https://wortschatz.uni-leipzig.de/en/download Word Freq origin
@@ -50,8 +50,9 @@ def word_frequency(document_word_freq_dict, document_size, df_background_corpus_
     :return: float mean of log 10 transformd (how often a word occurrce in the background corpus);
     float: correlation of background corpus count to document count of lemma;
     flaot: incidence of unique words
-    '''
-
+    """
+    if df_background_corpus_frequency is None:
+        return None, None, None
     freq_in_corpus = {k: float(df_background_corpus_frequency.get(k, {}).get(frequency_name, 1)) / background_corpus_size for k, v in document_word_freq_dict.items()}
     freq_in_document = {k: (v / document_size) * (float(freq_in_corpus.get(k, 1)) / background_corpus_size) for k, v in document_word_freq_dict.items()}
 

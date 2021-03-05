@@ -29,7 +29,18 @@ def supervised_ML(evaluation_label_path= os.path.join(os.getcwd(), "data", "Eval
                   non_feature_list=["Gutenberg_id", "Title", "Author"],
                   quality_control_features=["Hitrate affective Scores", "Hitrate sentiment shift", "Vocabulary correlation"]
                   ):
+    """
+    A work in progress approach to build a classifier for a binary classification problem.
+    Including under and oversampling and the classifiers SVM, Random Forest, Nave Bayes and different test-train split sizes
     
+    :param evaluation_label_path: path to labeled new document data
+    :param new_document_path: path to the new_document score file
+    :param extra_books_path: path to the extra_books score file
+    :param gutenberg_path: path to the gutenberg data score file
+    :param non_feature_list: a list of features not applicable to classification
+    :param quality_control_features: a list of features, with the purpose of quality control
+    :return:
+    """
     binary_label = "binary_label"
     continuos_label = "continuous_label"
     if not os.path.isdir(os.path.join(os.getcwd(), "data", "ML Results")):
@@ -81,48 +92,35 @@ def supervised_ML(evaluation_label_path= os.path.join(os.getcwd(), "data", "Eval
                         # evaluate(model=classifiers[-1], model_name=i, Language=j, feature_list=complete_feature_list, mode=k)
 
 
-def evaluate(model, Language, feature_list, model_name, mode):
-    df_eval_pred = df_eval[feature_list]
-    df_eval_pred = df_eval_pred.fillna(value=0)
-    y_pred = model.predict(df_eval_pred)
-    df_eval_corr = pd.DataFrame(data={"Labels": y_pred, "mean_label": df_eval["mean_label"]})
-    sns.heatmap(data=df_eval_corr.corr(), cmap="YlGnBu", annot=True)
-    plt.title("Correlation Heatmap for Language %s" % i)
-    plt.tight_layout()
-    plt.savefig(os.path.join(os.getcwd(), "data", "ML Results", "Classification_Correlation_%s_%s_%s.png" % (mode, model_name, Language)), dpi=400)
-    plt.clf()
+
     
 
 def normalize(df, columns):
+    """
+    Normalizes data to a range 0-1, based on the data range given in the data
+    :param df: pandas dataframe of scores
+    :param columns: the columns which need normalization
+    :return: pandas dataframe with normalized scores
+    """
     for column in columns:
         try:
             df[column] = df[column].abs() / df[column].abs().max()
         except:
-            # print(column)
             pass
     return df
 
 
-def general_statistics(df, mode, non_feature_list, binary_label):
-    feature_list = [i for i in df.columns if i not in non_feature_list]
-
-    # df = df[feature_list]
+def general_statistics(df, mode, binary_label):
+    """
+    Return the general statistics of the data
+    :param df: pandas dataframe of scores
+    :param mode: str, all data, under and oversampling
+    :param binary_label: column for the binary label
+    :return: None, generates a csv file with the statistic and two figures
+    """
     for i in ["de", "en"]:
         df[df["Language"]==i].describe().to_csv(os.path.join(os.getcwd(), "data", "ML Results", "data_Description_for_%s_%s.tsv" % (i, mode)), sep="\t")
     
-    # apply normalization techniques
-    # df = normalize(df, df.columns)
-    # print(df.dropna().shape[0], df.shape[0])
-    # print([len(df[i]) for i in feature_list])
-    # df_melt = pd.melt(df, id_vars=["Gutenberg_id", "Language"], value_vars=feature_list, var_name="scores", value_name="values")
-    #
-    #
-    # sns.violinplot(x="values", y="scores",  orient="h", split=True, hue="Language", data=df_melt, hue_order=["en", "de"])
-    # plt.suptitle("Data Distribution by Language and score")
-    # plt.tight_layout()
-    # plt.savefig(os.path.join(os.getcwd(), "data", "ML Results", "%s_Normalized_value_distribution.png" % mode), dpi=400)
-    # plt.clf()
-    #
     sns.countplot(x=binary_label, data=df, hue="Language", hue_order=["en", "de"])
     plt.title("Data Distribution by Language and score Label")
     plt.tight_layout()
@@ -138,6 +136,14 @@ def general_statistics(df, mode, non_feature_list, binary_label):
 
 
 def oversampling(df, Languages=["en", "de"], classes=[0, 1], binary_label="binary_label"):
+    """
+    Oversample the data, for the minority group, separated for each language
+    :param df: pandas dataframe with scores
+    :param Languages: list of languages
+    :param classes: the available classes
+    :param binary_label: name of the binary_label column
+    :return: pandas dataframe with oversampled data for each language
+    """
     df_both_Languages = None
     for i in Languages:
         df_new = None
@@ -145,8 +151,7 @@ def oversampling(df, Languages=["en", "de"], classes=[0, 1], binary_label="binar
         for index_j, j in enumerate(class_size):
             for index_k, k in enumerate(class_size[index_j + 1:]):
                 if j > k:
-                    # print(index_j +  1 + index_k)
-                    # print()
+
                     df_temp = df[(df["Language"]==i) & (df[binary_label]== classes[index_j +  1 + index_k])]
                     df_sample = df_temp.sample(n=j, replace=True)
                     if df_new is None:
@@ -173,6 +178,14 @@ def oversampling(df, Languages=["en", "de"], classes=[0, 1], binary_label="binar
     
     
 def undersampling(df, Languages=["en", "de"], classes=[0, 1], binary_label="binary_label"):
+    """
+    Undersample the data, for the majority class, separated for each language
+    :param df: pandas dataframe with scores
+    :param Languages: list of languages
+    :param classes: the available classes
+    :param binary_label: name of the binary_label column
+    :return: pandas dataframe with undersampled data for each language
+    """
     df_both_Languages = None
     for i in Languages:
         df_new = None
@@ -207,6 +220,19 @@ def undersampling(df, Languages=["en", "de"], classes=[0, 1], binary_label="bina
 
 
 def fit_classifier(df, mode, classifier, Language, non_feature_list, binary_label, normalized, test_size, sampling_mode):
+    """
+    
+    :param df:
+    :param mode:
+    :param classifier:
+    :param Language:
+    :param non_feature_list:
+    :param binary_label:
+    :param normalized:
+    :param test_size:
+    :param sampling_mode:
+    :return:
+    """
     df = df[df["Language"] == Language]
     feature_list = [i for i in df.columns if i not in [*non_feature_list, binary_label]]
     X_data = df[feature_list]
@@ -252,22 +278,6 @@ def fit_classifier(df, mode, classifier, Language, non_feature_list, binary_labe
                    "F1 Score": f1_score(y_test, y_pred),"TP": cm[0][0], "TN": cm[0][1], "FN": cm[1][0], "FP": cm[1][1]}
     print(result_dict)
     
-    # # <editor-fold desc="Write results to target file">
-    # target_path = os.path.join(os.getcwd(), "data", "ML Results", "ML_results.tsv")
-    # if os.path.isfile(target_path):
-    #     with open(target_path, "a") as file:
-    #         writer = csv.DictWriter(file, fieldnames=sorted([k for k, v in result_dict.items()]),
-    #                                 delimiter="\t",
-    #                                 lineterminator="\n")
-    #         writer.writerow(result_dict)
-    # else:
-    #     with open(target_path, "w") as file:
-    #         writer = csv.DictWriter(file, fieldnames=sorted([k for k, v in result_dict.items()]),
-    #                                 delimiter="\t",
-    #                                 lineterminator="\n")
-    #         writer.writeheader()
-    #         writer.writerow(result_dict)
-    # # </editor-fold>
     return model
 
 
@@ -283,26 +293,7 @@ def plot_results(df, Language, classifier, mode):
     plt.clf()
 
 
-def validation(model, binary_label):
-    external_data = pd.read_csv(os.path.join(os.getcwd(), "data", "score_collection_extra_books.tsv"),
-                                delimiter='\t', index_col=0, encoding="ISO-8859-1")
-    # external_data = pd.DataFrame(external_data)
-    
-    # external_data.rename(columns=df.iloc[0])
-    
-    
-    # external_data = external_data.drop(["topic_overlap"], axis=1)
-    external_data[binary_label] = external_data.apply(lambda x: 1 if x["title"] == "Duerrenmatt - Die Physiker.txt" else 0, axis=1)
-    
-    x_external = external_data[["mean_word_length","mean_syllables","count_logicals","count_conjugations","mean_sentence_length",
-                 "mean_punctuations","mean_lexical_diversity","type_token_ratio_nouns","type_token_ratio_verbs",
-                 "type_token_ratio_adverbs","type_token_ratio_adjectives","FRE","FKGL","count_repeated_words",
-                 "num_word_repetitions","mean_concretness", "nouns_overlap","verbs_overlap",
-                 "adverbs_overlap","adjectives_overlap", "sentiment_overlap"]]
-    y_external = external_data[binary_label]
-    y_pred = model.predict(x_external)
-    print("Accuarcy: ", accuracy_score(y_external, y_pred), "\nF1 Score: ", f1_score(y_external, y_pred))
-    print("Accuracy RandomForest: ", np.mean(y_external == y_pred))
+
     
 
 def label_books(df_gutenberg, df_extra, extra_books_hard_reads=["Duerrenmatt - Die Physiker.txt"]):

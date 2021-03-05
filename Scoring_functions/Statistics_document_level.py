@@ -5,14 +5,14 @@ import numpy as np
 
 
 def logical_incidence(tagsets_by_doc, tagset_name, doc_words):
-    '''
+    """
     Ref: Grasser2004 - Logical Operators
     Calculate the incidence of logicals, within the document
     :param tagsets_by_doc: dict, {key=tagset names, value=dict{key=lemma, value=absolute word count}}
     :param tagset_name: str, tagset name for the logicals
     :param doc_words: int, # of words within the document
     :return: dict, {key=name of logical, value=incidence of this logical}
-    '''
+    """
     tagset = tagsets_by_doc.get(tagset_name, {})
     
     normalizer = doc_words / 1000
@@ -21,7 +21,7 @@ def logical_incidence(tagsets_by_doc, tagset_name, doc_words):
 
 
 def connective_incidence(lemma, df_connective, connective_type_label):
-    '''
+    """
     Ref: Grasser2004 - Connectives
     Ref: Crossley2016- Connectives
     Calculate connective incidence scores for each connective type given in the dependency dataset
@@ -29,7 +29,7 @@ def connective_incidence(lemma, df_connective, connective_type_label):
     :param df_connective: dict, {key=lemma, value=str(Type of Connective)}
     :param connective_type_label: str, label of the Type of Connective column
     :return: dict, {key=incidence connetive *Type of Connective*, value=Incidence of the connective type}
-    '''
+    """
     
     
     agg_list = []
@@ -54,28 +54,28 @@ def connective_incidence(lemma, df_connective, connective_type_label):
     return connective_incidences
 
 
-def unique_lemma(tagsets_by_doc, tagset_name, document_sentences):
-    '''
+def unique_lemma(tagsets_by_doc, tagset_name, document_words):
+    """
     Ref: Crossley2016 - Givenness
     Calculate the unique lemma, within the document, can be reduced to a certain tagset
     :param tagset_by_doc: dict, {key=tagset names, value=dict{key=lemma, value=absolute word count}}
     :param tagset_name: str, tagset name, defining the POS tag set
     :param document_sentences: # of sentences
     :return: float, # uniquely occurring lemma/# sentences
-    '''
+    """
     tagset = tagsets_by_doc.get(tagset_name, {})
     list_unique = [True for v in tagset.values() if v == 1]
-    return len(list_unique)/document_sentences
+    return len(list_unique)/(document_words/1000)
     
 
 def Flescher_Reading_Ease(document_words, document_syllables, num_sentences):
-    '''
+    """
     Ref: Grasser2004 - Readability Scores
     :param document_words: list, [str= words]
     :param document_syllables: list, [int=Syllabel count]
     :param num_sentences: int, # sentences in the document
     :return: float, FRE score: 206.835 - 1.015 * AvgSentenceLength - 84.6 * AvgSyllablePerWord
-    '''
+    """
     if len(document_words) < 200:
         return None
 
@@ -85,14 +85,14 @@ def Flescher_Reading_Ease(document_words, document_syllables, num_sentences):
 
 
 def Flescher_Kincaid_Grade_Level(document_words, document_syllables, num_sentences):
-    '''
+    """
     Ref: Grasser2004 - Readability Scores
 
     :param document_words: list, [str= words]
     :param document_syllables: list, [int=Syllabel count]
     :param num_sentences: int, # sentences in the document
     :return: float, FKGL score: 0.39 * AvgSentenceLength + 11.8 * AvgSyllablePerWord - 15.59
-    '''
+    """
     if len(document_words) < 200:
         return None
 

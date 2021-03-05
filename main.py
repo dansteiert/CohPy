@@ -27,7 +27,7 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
          word_freq_header=(None, None), word_freq_corpus_size=(1000000, 1000000),
          w2v_model_path=(os.path.join(os.getcwd(), "data", "Score files", "120sdewac_sg300.vec"),
                          os.path.join(os.getcwd(), "data", "Score files", "120sdewac_sg300.vec")),
-         # w2v_model_path=(),
+         # w2v_model_path=(None, None),
          connective_path=(os.path.join(os.getcwd(), "data", "Score files", "Connectives_en.csv"),
                          os.path.join(os.getcwd(), "data", "Score files", "Connectives_de.csv")),
          connective_separator=(",", ","), connective_identifier=("WORD", "WORD"),
@@ -38,6 +38,45 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
          file_path_extra_books=os.path.join(os.getcwd(), "data", "Extra_books"),
          run_new_documents=True, target_path_new_documents=os.path.join(os.getcwd(), "data", "score_collection_new_documents.tsv"),
          file_path_new_documents=os.path.join(os.getcwd(), "data", "New_documents")):
+    """
+    Download gutenberg project data, calculate for books from the gutenberg project (or a selection), a set of
+    "extra books" and "new documents" a set of comprehensibility scores.
+    The distinction between "extra books" and "new documents" is made, to account for additions to the guteberg project
+    (extra books) and validation data, which got in the process the name "new documents".
+    :param Gutenberg_path: Path to the gutenberg metadata file, or where it should be generated
+    :param Gutenberg_path_for_download: Path to where the gutenberg project books are to be downloaded into/are stored
+    :param Treetagger_loc: Location for the Treetager installation on your machine
+    :param languages: 2 letter synonym, based on gutenberg corpus naming, english("en") and german("de") are implemented
+     currently, subsequent changes are necessary to add new languages. language order is important since all other elements are depending on it!
+    :param affective_score_paths: Path to the affective score files, in order of the language!
+    :param affective_score_separator: argument passed to pandas read_csv as sep, for the affective score file, for each language
+    :param affective_identifier: the identifier colum for the affective score, for each language
+    :param affective_score_label: the names of the regarded affective scores as a list, for each language one
+    :param concreteness_score_label: the label for the concreteness column (also within the affective score file!, str, one for each language
+    :param word_freq_path: Path to the background corpus frequency file, one for each language
+    :param word_freq_sep: argument passed to pandas read_csv function as sep, one for each language
+    :param word_freq_index_col: argument passed to pandas read_csv function as index_col, , one for each language
+    :param word_freq_col: column name in which the frequency is stored, one for each language
+    :param word_freq_identifier: column name, in which the identifier(lemma/words) are stored, one for each language
+    :param word_freq_header: argument passed to pandas read_csv function as header, one for each language
+    :param word_freq_corpus_size: # of sentences within the background corpus, one for each language
+    :param w2v_model_path: path to the sentiment w2v model, one for each language
+    :param connective_path: path to the file with the connective words, one for each language
+    :param connective_separator: argument passed to pandas read_csv function as sep, one for each language
+    :param connective_identifier: column name of the identifier/word/lemma, one for each language
+    :param connective_label: column name of the label of the type of connective, one for each language, one for each language
+    :param run_Gutenberg: bool, whether the gutenberg corpus is downloaded and scores calculated for its books.
+    :param target_path_full_gutenberg: path to a file, where the results are stored in for the gutenberg books
+    :param selected_Gutenberg: bool, whether only a selection of books should be run through the pipeline
+    :param target_path_selected_gutenberg: path to a file, where the results are stored in for the selected gutenberg books
+    :param run_extra_books: bool, whether the files in "extra_books" are run through the pipeline
+    :param target_path_extra_books: path to a file, where the results are stored in for the "extra books"
+    :param file_path_extra_books: path to where the "extra books" are stored
+    :param run_new_documents: bool, whether the files in "new_documents" are run through the pipeline
+    :param target_path_new_documents: path to a file, where the results are stored in for the "new documents"
+    :param file_path_new_documents: path to where the "new documents" are stored
+    :return: None, results are writen to target_path_{{selected_}gutenberg, extra_books, new_document}
+    """
     
     print(datetime.datetime.now(), "Start Readability Calculations")
 
@@ -45,9 +84,8 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
     
     print(datetime.datetime.now(), "Load V2W model")
     # <editor-fold desc="Load W2V model">
-    if len(w2v_model_path) == 0:
-        w2v_model = [None, None]
-    elif len(set(w2v_model_path)) == len(w2v_model_path):
+
+    if len(set(w2v_model_path)) == len(w2v_model_path):
         w2v_model = load_w2v(w2v_model_path[0])
         w2v_model = [w2v_model, w2v_model]
     else:
@@ -181,7 +219,3 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
                   for meta_dict in gutenberg_meta_data
                   ]
         print("passed: ", mean_of_list(passed))
-
-
-
-main()

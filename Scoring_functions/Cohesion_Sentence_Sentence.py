@@ -3,13 +3,13 @@ from Helper.w2v_model import sentence_sentiment_shift
 import numpy as np
 
 def sentiment_shift(tagset_by_sent, tagset_name, sentiment_dict):
-    '''
+    """
     Ref: Crossley2019 - Semantic similarity features
     :param tagset_by_sent: list[ dict{word: occurance in sentence}], a list of dictionaries, where the keys are the words and the value is the total occurance in this sentence
     :param tagset_name: str, name of the POS-tag set
     :param sentiment_dict: dict, {word: sentiment vector}
     :return: float, mean sentiment shift - cosine distance between sentences
-    '''
+    """
 
     if sentiment_dict is None:
         return 0
@@ -30,13 +30,13 @@ def sentiment_shift(tagset_by_sent, tagset_name, sentiment_dict):
 
 
 def tag_overlap(tagset_by_sent, tagset_name):
-    '''
+    """
     Ref: Crossley 2016 - Lexical Overlap
     Ref: Pitler08 - Elements of Lexical cohesion - Generally Bad Features! - has cosine similarity - use conditional probability instead
     :param tagset_by_sent: list[ dict{word: occurance in sentence}], a list of dictionaries, where the keys are the words and the value is the total occurance in this sentence
     :param tagset_name: str, name of the POS-tag set, for which overlapping lemma should be searched
     :return: float, mean of overlapping elements for given tagset
-    '''
+    """
 
     # print("Tag OVerlap")
     tagset = tagset_by_sent.get(tagset_name, [])
@@ -57,13 +57,15 @@ def tag_overlap(tagset_by_sent, tagset_name):
 
 
 def affective_shift(affective_score_dict, affective_label):
-    '''
+    """
     Ref: Jacobs2018
     Calculate with the affective scores, by sentence, their absolute affective shift, for adjacent sentences, per affective_label element
     :param affective_score_dict: dict{affective label: list[sentence list[affective values per lemma]]}
     :param affective_label: list, of affective value names
     :return: dict, {key=affective_labels: value=float, mean absolute difference of pairwise sentence affective}
-    '''
+    """
+    if affective_score_dict is None:
+        return None
     aff_shift_score = {}
     
     # Iterate over all affective_labels
@@ -84,14 +86,14 @@ def affective_shift(affective_score_dict, affective_label):
 
 
 def tense_change(tagset_by_sent, tagset_name_past="Past", tagset_name_present="Present"):
-    '''
+    """
     Ref:
     Calculate mean number of time changes between adjacent sentences with POS tags
     :param tagset_by_sent: list[ dict{word: occurance in sentence}], a list of dictionaries, where the keys are the words and the value is the total occurance in this sentence
     :param tagset_name_past: str, name of the POS-tag set, which contains verbs in the past form
     :param tagset_name_present: str, name of the POS-tag set, which contains verbs in the present form
     :return: float, mean of times, the tense was changed from past to present or present to past
-    '''
+    """
     
     tagset_past = tagset_by_sent.get(tagset_name_past, [])
     tagset_present = tagset_by_sent.get(tagset_name_present, [])

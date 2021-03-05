@@ -4,8 +4,13 @@ import pandas as pd
 
 
 def write_single_txt_files():
-    eval_dir = os.path.join("D:\\Uni\\NLP\\Projects\\CohPy", "data", "Evaluation", "christies ’styles’")
-    search_dir = os.path.join("D:\\Uni\\NLP\\Projects\\CohPy", "data", "New_documents", "en")
+    """
+    This function is used to generate out of a list of sentences, single .txt, such that they can be processed with the
+    pipeline, without futher changes
+    :return: None, files are saved to search_dir
+    """
+    eval_dir = os.path.join("data", "Evaluation", "christies ’styles’")
+    search_dir = os.path.join("data", "New_documents", "en")
 
     # eval_dir = os.path.join("D:\\Uni\\NLP\\Projects\\CohPy", "data", "Evaluation", "Lüdtke")
     # search_dir = os.path.join("D:\\Uni\\NLP\\Projects\\CohPy", "data", "New_documents", "de")
@@ -26,7 +31,7 @@ def write_single_txt_files():
                 f.write(text)
 
             for index, row in df.iterrows():
-                ## combine two adjacent texts
+                # # combine two adjacent texts
                 # try:
                 #     with open(os.path.join(search_dir, i[:-13] + str(index) + ".txt"), "w") as f:
                 #         f.writelines(str(row[text_col]) + " " + str(df.iloc[index + 1][text_col]))

@@ -1,3 +1,9 @@
+"""
+The sole purpose of this file, is to collect the gutenberg_id for books selected to be run in the pipeline, if the option
+selected_Gutenberg=True is given
+"""
+
+
 James_joyce =[2814, 4217, 4300, 7872, 20601]
 Leo_Tolstoy = [243, 689, 985, 986, 1399, 1938, 2142, 2450, 2600, 2637, 3540, 3541, 3630, 3631, 4602, 4761, 6157, 7176,
                9792, 12379, 12604, 13214, 13259, 15628, 17352, 17552, 17949, 17950, 17951, 19680, 19681, 26472, 26581,

@@ -14,7 +14,7 @@ import numpy as np
 def pipeline(text_path, language, language_order, w2v_model, tagger, df_affective, affective_score_label, concreteness_label,
              df_background_corpus_frequency, background_corpus_size, df_connective, connective_type_label, target_path,
              title, author, gutenberg_id, gutenberg_meta_dict_elem=None):
-    '''
+    """
     :param text_path: str, Path to .txt file with text to be processed
     :param language: str, language of the text
     :param language_order: list, define position for language specific dependencies
@@ -33,7 +33,7 @@ def pipeline(text_path, language, language_order, w2v_model, tagger, df_affectiv
     :param gutenberg_id: str, id of the book
     :param gutenberg_meta_dict_elem: dict, meta data of the gutenberg corpus
     :return: None, results are written to target_path
-    '''
+    """
     
     # <editor-fold desc="Get Gutenberg Metadata">
     if gutenberg_meta_dict_elem is not None:
@@ -254,7 +254,7 @@ def pipeline(text_path, language, language_order, w2v_model, tagger, df_affectiv
     mean_punctuations, mean_conjunctions, mean_pronouns, mean_articles = [mean_tags_by_sentence(tagsets_by_doc=tagsets_by_doc, tagset_name=tagset, document_sentence=document_sentences)
                                                                            for tagset in ["Punctuations", "Conjunctions", "Pronoun", "Article"]]
     
-    unique_content_incidence = unique_lemma(tagsets_by_doc=tagsets_by_doc, tagset_name="Content", document_sentences=document_sentences)
+    unique_content_incidence = unique_lemma(tagsets_by_doc=tagsets_by_doc, tagset_name="Content", document_words=document_words)
 
     result_dict = {**result_dict, **{"Mean sentence length": mean_sent_length, "Mean punctuation per sentence": mean_punctuations,
                                      "Mean conjunctions per sentence": mean_conjunctions, "Maximal sentence length": max_sentence_length,
@@ -268,24 +268,10 @@ def pipeline(text_path, language, language_order, w2v_model, tagger, df_affectiv
     cont_func_ratio = ratio_tags_a_to_tags_b(tagsets_by_doc=tagsets_by_doc, tagset_a="Content", tagset_b="Functional")
     pronoun_noun_ratio = ratio_tags_a_to_tags_b(tagsets_by_doc=tagsets_by_doc, tagset_a="Noun", tagset_b="Pronoun")
     adjective_verb_quotien = ratio_tags_a_to_tags_b(tagsets_by_doc=tagsets_by_doc, tagset_a="Adjective", tagset_b="Verb")
-
-    
-    # <editor-fold desc="Ratio Scores">
     ttr_nouns, ttr_noun_pronoun, ttr_pronoun, ttr_adverbs, ttr_adjectives, ttr_verbs, ttr_all_tags = [type_token_ratio(tagsets_by_doc=tagsets_by_doc, tagset_name=tagset)
                                                                                                       for tagset in ["Noun", "Pronoun", "Noun and Pronoun", "Adverb",
                                                                                                                      "Adjective", "Verb", "all"]]
-    
-    # type_token_ratio_nouns = type_token_ratio(tagsets_by_doc=tagsets_by_doc, tagset_name="Noun")
-    # type_token_ratio_noun_pronoun = type_token_ratio(tagsets_by_doc=tagsets_by_doc, tagset_name="Pronoun")
-    # type_token_ratio_pronoun = type_token_ratio(tagsets_by_doc=tagsets_by_doc, tagset_name="Noun and Pronoun")
-    # type_token_ratio_adverbs = type_token_ratio(tagsets_by_doc=tagsets_by_doc, tagset_name="Adverb")
-    # type_token_ratio_adjectives = type_token_ratio(tagsets_by_doc=tagsets_by_doc, tagset_name="Adjective")
-    # type_token_ratio_verbs = type_token_ratio(tagsets_by_doc=tagsets_by_doc, tagset_name="Verb")
-    # type_token_ratio_all_tags = type_token_ratio(tagsets_by_doc=tagsets_by_doc, tagset_name="all")
-    
-    
 
-    # </editor-fold>
     mean_lexical_diversity = lexical_diversity(word_frequency_dict=word_frequency_by_document_dict, document_sentences=document_sentences)
     result_dict = {**result_dict, **{"Pronoun-noun ratio": pronoun_noun_ratio, "Content word-functional word ratio": cont_func_ratio,
                                      "Type-token ratio nouns": ttr_nouns, "Type-token ratio verbs": ttr_verbs,
@@ -320,21 +306,6 @@ def pipeline(text_path, language, language_order, w2v_model, tagger, df_affectiv
     nouns_overlap, pronouns_overlap, noun_pronouns_overlap, adverbs_overlap, adjectives_overlap, verbs_overlap, all_words_overlap = [tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name=tagset)
                                                                                                                                    for tagset in ["Noun", "Pronoun", "Noun and Pronoun", "Adverb",
                                                                                                                      "Adjective", "Verb", "all"]]
-    # # <editor-fold desc="Overlaps">
-    # nouns_overlap = tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name="Noun")
-    #
-    # pronouns_overlap = tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name="Pronoun")
-    #
-    # noun_pronouns_overlap = tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name="Noun and Pronoun")
-    #
-    # adverbs_overlap = tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name="Adverb")
-    #
-    # adjectives_overlap = tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name="Adjective")
-    #
-    # verbs_overlap = tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name="Verb")
-    #
-    # all_words_overlap = tag_overlap(tagset_by_sent=tagsets_by_sent_dict, tagset_name="all")
-    # # </editor-fold>
     
     mean_tense_changes = tense_change(tagset_by_sent=tagsets_by_sent_dict, tagset_name_past="Past",
                                       tagset_name_present="Present")
@@ -343,15 +314,23 @@ def pipeline(text_path, language, language_order, w2v_model, tagger, df_affectiv
     mean_sentiment_shift = sentiment_shift(tagset_by_sent=tagsets_by_sent_dict, tagset_name="Noun", sentiment_dict=sentiment_dict)
     
     affective_shift_scores = affective_shift(affective_score_dict=dict_affinities_by_sent, affective_label=affective_score_label[indexer])
-    
-    result_dict = {**result_dict,  **{"Noun overlap": nouns_overlap, "Pronoun overlap": pronouns_overlap,
-                                                              "Noun Pronoun Overlap": noun_pronouns_overlap,
-                                     "Verb Overlap": verbs_overlap, "Adverb Overlap": adverbs_overlap, "Adjective Overlap": adjectives_overlap,
-                                                              "All Word Overlap": all_words_overlap,
-                                     "Mean sentiment shift": mean_sentiment_shift, "Hitrate sentiment shift": sentiment_hitrate,
-                                      "Mean tense changes": mean_tense_changes},
-                   **affective_shift_scores,
-                   }
+    if affective_shift_scores is None:
+        result_dict = {**result_dict,  **{"Noun overlap": nouns_overlap, "Pronoun overlap": pronouns_overlap,
+                                                                  "Noun Pronoun Overlap": noun_pronouns_overlap,
+                                         "Verb Overlap": verbs_overlap, "Adverb Overlap": adverbs_overlap, "Adjective Overlap": adjectives_overlap,
+                                                                  "All Word Overlap": all_words_overlap,
+                                         "Mean sentiment shift": mean_sentiment_shift, "Hitrate sentiment shift": sentiment_hitrate,
+                                          "Mean tense changes": mean_tense_changes}
+                       }
+    else:
+        result_dict = {**result_dict,  **{"Noun overlap": nouns_overlap, "Pronoun overlap": pronouns_overlap,
+                                                                  "Noun Pronoun Overlap": noun_pronouns_overlap,
+                                         "Verb Overlap": verbs_overlap, "Adverb Overlap": adverbs_overlap, "Adjective Overlap": adjectives_overlap,
+                                                                  "All Word Overlap": all_words_overlap,
+                                         "Mean sentiment shift": mean_sentiment_shift, "Hitrate sentiment shift": sentiment_hitrate,
+                                          "Mean tense changes": mean_tense_changes},
+                       **affective_shift_scores,
+                       }
     # </editor-fold>
     
     # <editor-fold desc="Write results to target file">

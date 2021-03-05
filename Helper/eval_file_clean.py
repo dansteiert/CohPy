@@ -1,6 +1,10 @@
 import os
 import pandas as pd
 def clean():
+    """
+    This function is used to do some data cleaning task for the given evaluation function
+    :return: writes out those evaluation files with the suffix "_cleaned.csv"
+    """
     # eval_dir = os.path.join(os.getcwd(), "data", "Evaluation", "christies ’styles’")
     eval_dir = os.path.join(os.getcwd(), "data", "Evaluation", "Lüdtke")
     # search_dir = os.path.join(os.getcwd(), "data", "New_documents")
