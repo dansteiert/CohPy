@@ -5,8 +5,8 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from matplotlib import pyplot as plt
 import keras
-# from keras.models import Sequential
-# from keras.layers import Dense  # Neural network
+from keras.models import Sequential
+from keras.layers import Dense  # Neural network
 import numpy as np
 from sklearn.linear_model import LinearRegression, ARDRegression, BayesianRidge, ElasticNet, Lasso
 from sklearn.ensemble import AdaBoostRegressor, BaggingRegressor, ExtraTreesRegressor, GradientBoostingRegressor, RandomForestRegressor
@@ -16,23 +16,31 @@ import csv
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-def continuous_prediction(target_path = os.path.join(os.getcwd(), "data", "ML Results", "Regression_data.csv")):
-    df = pd.read_csv(target_path, delimiter=',', encoding="ISO-8859-1", index_col=0)
-    # df = pd.DataFrame(df)
+
+def regression_analysis(target_path = os.path.join(os.getcwd(), "data", "ML Results", "Regression_data.csv"),
+                        non_feature_list=["Gutenberg_id", "Title", "Author", "Language"],
+                        quality_control_features = ["Hitrate affective Scores", "Hitrate sentiment shift", "Vocabulary correlation"],
+                        continuous_label="continuous_label"):
+    """
+    Run multiple regression for each dataframe
+    :param target_path: path, to the Datasets
+    :param non_feature_list: list, of a non features, excluding languages and quality control features
+    :param quality_control_features: list, of the column names of the quality control features
+    :param continuous_label: str, label of the continuous label column
+    :return: None, Regression results are saved
+    """
     
+    # <editor-fold desc="Read in data">
+    df = pd.read_csv(target_path, delimiter=',', encoding="ISO-8859-1", index_col=0)
     df = df.replace(np.nan, -1)
     df = df.replace(np.inf, -1)
     df = df.fillna(-1)
-    regression_analysis(df=df)
+    # </editor-fold>
     
-
-def regression_analysis(df, non_feature_list=["Gutenberg_id", "Title", "Author", "Language"],
-                        quality_control_features = ["Hitrate affective Scores", "Hitrate sentiment shift", "Vocabulary correlation"],
-                        continuous_label="continuous_label"):
-
     feature_list = [i for i in df.columns if i not in [*non_feature_list, *quality_control_features, continuous_label]]
-    
-    
+
+
+    # <editor-fold desc="Generate Datasets to Train and Test the model with">
     SWRF = df[df["Title"].str.startswith("SWRF-V_Rohdaten", na=False)]
     SWRF_Y = SWRF[continuous_label]
     SWRF_X = SWRF[feature_list]
@@ -44,39 +52,46 @@ def regression_analysis(df, non_feature_list=["Gutenberg_id", "Title", "Author",
     CS = df[df["Title"].str.startswith("English_novel_christie_styles_sents", na=False)]
     CS_Y = CS[continuous_label]
     CS_X = CS[feature_list]
-    
+    # </editor-fold>
+
+    # <editor-fold desc="Generate Regressors">
     regressor_list = [LinearRegression(n_jobs=-1), ARDRegression(n_iter=50), BayesianRidge(n_iter=50), ElasticNet(), Lasso(),
                     AdaBoostRegressor(loss="square"), BaggingRegressor(n_jobs=-1), ExtraTreesRegressor(n_jobs=-1), GradientBoostingRegressor(),
                       RandomForestRegressor(n_jobs=-1)]
     regressor_names = ["LinearRegression", "BayesianRidge", "ElasticNet", "Lasso",
                     "AdaBoostRegressor", "BaggingRegressor", "ExtraTreesRegressor", "GradientBoostingRegressor",
                       "RandomForestRegressor"]
-    
-    # for X_data, y_data, name in zip([SWRF_X, ZVV_X, CS_X], [SWRF_Y, ZVV_Y, CS_Y], ["SWRF", "ZVV", "CS"]):
-    for X_data, y_data, name in zip([CS_X], [CS_Y], ["CS"]):
-        print(name)
+    # </editor-fold>
+
+    # <editor-fold desc="Run Regression on each dataset and the regressors">
+    for X_data, y_data, name in zip([SWRF_X, ZVV_X, CS_X], [SWRF_Y, ZVV_Y, CS_Y], ["SWRF", "ZVV", "CS"]):
         Linear_regerssion(X=X_data, y=y_data, scoring_function=f_regression, scoring_function_name="f_regression",
                           num_features=len(feature_list),
                           regressor_name=regressor_names, regressor=regressor_list, dataset_name=name)
         # Linear_regerssion(X=X_data, y=y_data, scoring_function=mutual_info_regression, num_features=len(feature_list))
+    # </editor-fold>
 
-
-## Results SWRF 29 Feauters f_regression R2=0.496786837176466
-## Results SWRF 45 Feauters mutual information R2=0.4923013086331605
-## Results ZVV 49 Feauters f_regression R2=0.22875175933266922
-## Results ZVV 22 Feauters mutual information R2=0.2808433360869045
-## Results CS 13 Feauters f_regression R2=0.08615368667902612
-## Results CS 30 Feauters mutual information R2=0.09038118817925167
+    Regression_evaluation(target_path = os.path.join(os.getcwd(), "data", "ML Results", "Regression_results.tsv"))
 
 
 def Linear_regerssion(X, y, num_features, regressor, dataset_name, regressor_name, scoring_function=mutual_info_regression,
                       scoring_function_name="mutual_information",
-                      target_path = os.path.join(os.getcwd(), "data", "ML Results", "Regression_results.tsv"),
-                      
-):
-    
+                      target_path = os.path.join(os.getcwd(), "data", "ML Results", "Regression_results.tsv")):
+    """
+    Test and Train the regressors, based on the k best selected features (for all possible k), the results (as R^2) are written out to an extra file
+    :param X: Features for ML
+    :param y: Label for ML
+    :param num_features: the count of the features
+    :param regressor: list, of all regressor instance, which are used
+    :param dataset_name: str, the name of the dataset
+    :param regressor_name: list, names of the regressors used
+    :param scoring_function: scoring function instance for the k best feature selection
+    :param scoring_function_name: str, name of the scoring function
+    :param target_path: path, where the results are saved to
+    :return: None, results are written to a file specified in taregt_path
+    """
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=1)
-    for k in range(num_features, 30, -5):
+    for k in range(1, num_features, 1):
         # Select k best features
         fs = SelectKBest(score_func=scoring_function, k=k)
         fs.fit(X_train, y_train)
@@ -108,48 +123,12 @@ def Linear_regerssion(X, y, num_features, regressor, dataset_name, regressor_nam
 
 
 
-
-# %%
-
-def model_trainer(X_data, Y_data, iteration):
-    best_r2 = -100000000
-    for i in range(0, iteration):
-        
-        model = Sequential()
-        model.add(Dense(128, input_dim=X_data.shape[1], activation="relu"))
-        model.add(Dense(64, input_dim=X_data.shape[1], activation="relu"))
-        model.add(Dense(1, kernel_initializer='normal'))
-        model.compile(loss="mean_squared_error", optimizer='adam')
-        
-        history = model.fit(X_data, Y_data, epochs=100, batch_size=32, verbose=0)
-        prediction = model.predict(X_data)
-        
-        current_r2 = r2_score(Y_data, prediction)
-        
-        if current_r2 > best_r2:
-            best_r2 = current_r2
-            best_model = model
-    
-    return best_model, best_r2
-
-
-# %%
-
-# best_model, best_r2 = model_trainer(CS_X_data, CS_Y_data, 100)
-# print(best_r2)
-#
-# # %%
-#
-# best_model, best_r2 = model_trainer(SWRF_X_data, SWRF_Y_data, 100)
-# print(best_r2)
-#
-# # %%
-#
-# best_model, best_r2 = model_trainer(ZVV_X_data, ZVV_Y_data, 100)
-# print(best_r2)
-continuous_prediction()
-
 def Regression_evaluation(target_path = os.path.join(os.getcwd(), "data", "ML Results", "Regression_results_backup.tsv")):
+    """
+    Generate a figure of the results of the regression
+    :param target_path: path to the regression result file
+    :return: None, a figure is generated
+    """
     df = pd.read_csv(target_path, sep="\t")
     df[["k", "score"]] = df[["k", "score"]].apply(pd.to_numeric, errors='coerce')
     g = sns.catplot(x="k", y="score", hue="Regressor", row="Dataset name",

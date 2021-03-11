@@ -9,6 +9,8 @@ from Helper.Helper_functions import load_score_df, load_word_freq, mean_of_list
 from Helper.w2v_model import load_w2v
 from Scoring_functions.Pipeline import pipeline
 from Helper.Load_books import load_gutenberg, download_files
+from Machine_learning.Supervised_classification import supervised_ML
+from Machine_learning.Regression import regression_analysis
 
 
 
@@ -219,3 +221,17 @@ def main(Gutenberg_path = os.path.join(os.getcwd(), "data", "Gutenberg", "data.j
                   for meta_dict in gutenberg_meta_data
                   ]
         print("passed: ", mean_of_list(passed))
+
+
+    # <editor-fold desc="Run Binary Classification Task">
+    if selected_Gutenberg:
+        supervised_ML(evaluation_label_path=os.path.join(os.getcwd(), "data", "Evaluation", "Evaluation_label.csv"),
+                      extra_books_path=target_path_extra_books, new_document_path=target_path_extra_books,
+                      gutenberg_path=target_path_selected_gutenberg)
+    else:
+        supervised_ML(evaluation_label_path=os.path.join(os.getcwd(), "data", "Evaluation", "Evaluation_label.csv"),
+                      extra_books_path=target_path_extra_books, new_document_path=target_path_extra_books,
+                      gutenberg_path=target_path_full_gutenberg)
+    # </editor-fold>
+    
+    regression_analysis(target_path=os.path.join(os.getcwd(), "data", "ML Results", "Regression_data.csv"))

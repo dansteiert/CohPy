@@ -3,7 +3,6 @@ import numpy as np
 
 ################# Helper functions
 
-# TODO: write what functions do
 def check_tags(tag, accept_tags=[], accept_tags_start_with=[], exclude_tags=[], exclude_tags_start_with=[]):
     """
     Desision function to check whether a tag is within the searched for tag set.

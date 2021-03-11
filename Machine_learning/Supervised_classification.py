@@ -87,7 +87,7 @@ def supervised_ML(evaluation_label_path= os.path.join(os.getcwd(), "data", "Eval
                 for i in ["RandomForest"]:
                     for j in ["en", "de"]:
                         classifiers.append(
-                            fit_classifier(df_temp, classifier=i, Language=j, mode=k, non_feature_list=[*non_feature_list, *quality_control_features, "Language"],
+                            fit_classifier(df_temp, classifier=i, Language=j, non_feature_list=[*non_feature_list, *quality_control_features, "Language"],
                                            binary_label=binary_label, normalized=normalization, test_size=test_size, sampling_mode=k))
                         # evaluate(model=classifiers[-1], model_name=i, Language=j, feature_list=complete_feature_list, mode=k)
 
@@ -219,19 +219,19 @@ def undersampling(df, Languages=["en", "de"], classes=[0, 1], binary_label="bina
     return df_both_Languages
 
 
-def fit_classifier(df, mode, classifier, Language, non_feature_list, binary_label, normalized, test_size, sampling_mode):
+# TODO: Finish documentation - this file and Regression!!
+def fit_classifier(df, classifier, Language, non_feature_list, binary_label, normalized, test_size, sampling_mode):
     """
-    
-    :param df:
-    :param mode:
-    :param classifier:
-    :param Language:
-    :param non_feature_list:
-    :param binary_label:
-    :param normalized:
-    :param test_size:
-    :param sampling_mode:
-    :return:
+    Fit a model to the given data in df, and return the fitted model
+    :param df: pandas data frame with columns to predict
+    :param classifier: str, name of the classifier
+    :param Language: str, 2-Language code
+    :param non_feature_list: list, of features, not to use in classification
+    :param binary_label: str, label of the binary label column
+    :param normalized: Bool, indicator whether the data has been normalized or not
+    :param test_size: float, (0-1) to pass to  sklearns train_test_split function as test_size
+    :param sampling_mode: str, of the sampling mode
+    :return: fitted model
     """
     df = df[df["Language"] == Language]
     feature_list = [i for i in df.columns if i not in [*non_feature_list, binary_label]]
@@ -282,6 +282,14 @@ def fit_classifier(df, mode, classifier, Language, non_feature_list, binary_labe
 
 
 def plot_results(df, Language, classifier, mode):
+    """
+    Generate a plot with the "impact" of each label to the models labeling
+    :param df: pandas dataframe, containing a column "model_impact" and "features"
+    :param Language: str, 2 letter language code
+    :param classifier: str, name of the classifier
+    :param mode: str, name of the resampling method
+    :return:None, a figure is created
+    """
     df = df.sort_values(by="model_impact", ascending=False)
     # sns.barplot(y="features", x="model_impact", data=df, color="b", orient="h")
     sns.barplot(x="features", y="model_impact", data=df, color="b")
@@ -293,10 +301,14 @@ def plot_results(df, Language, classifier, mode):
     plt.clf()
 
 
-
-    
-
 def label_books(df_gutenberg, df_extra, extra_books_hard_reads=["Duerrenmatt - Die Physiker.txt"]):
+    """
+    Labeling function for the binary classification, which is based on author reputation, who writes hard to read books and who writes easy to read books
+    :param df_gutenberg: pd dataframe, results of the gutenberg project files
+    :param df_extra: pd dataframe, results of the files in the "extra books" folder
+    :param extra_books_hard_reads: list, titles of the hard to read books in the extra books folder
+    :return: merged dataframe, with their labels given
+    """
     df_extra["Gutenberg_id"] = df_extra.apply(lambda x: -2 if x["Title"] in extra_books_hard_reads else -1, axis=1)
     df = df_extra.append(df_gutenberg)
     hard_reads = [*James_joyce, *Leo_Tolstoy, *Moby_Dick, *Thomas_Mann, *Heinrich_von_Kleist, *J_W_v_Goethe, *Franz_Kafka,
@@ -310,15 +322,27 @@ def label_books(df_gutenberg, df_extra, extra_books_hard_reads=["Duerrenmatt - D
   
     
 def label_evaluation_data(df_eval, df_evaluation_labeled):
+    """
+    Join results and labels for the evaluation dataset
+    :param df_eval: pd dataframe, results of the evaluation
+    :param df_evaluation_labeled: pd dataframe, lables of the evaluation data
+    :return: pd dataframe, join of the above
+    """
     df_eval = df_eval.join(df_evaluation_labeled.set_index("identifier"), on="Title", rsuffix="_label")
     return df_eval
 
 
-def ML_results_evaluation(target_path = os.path.join(os.getcwd(), "data", "ML Results", "ML_results.tsv")):
+def ML_results_evaluation(target_path = os.path.join(os.getcwd(), "data", "ML Results", "ML_results.tsv"), scoring="F1 Score", test_size=0.3):
+    """
+    Generate a figure to compare the results of the machine learning approach
+    :param scoring: str, name of the score function to look at
+    :param test_size, float, the size earlier passed as test_size to sklearn train_test_split function
+    :param target_path: Path to the ML results
+    :return: None, Figure is generated
+    """
     df = pd.read_csv(target_path, sep="\t")
-    sns.catplot(x="Model", y="F1 Score", hue="Language", col="Normalized", row="Sampling Mode",
-                sharey=True, sharex=True, data=df[df["Test size"]== 0.3], kind="bar")
-    plt.suptitle("F1 Score - for different models - test size 0.3")
-    plt.savefig(os.path.join(os.getcwd(), "data", "ML Results", "F1_Score_Test_size_0.3.png"), dpi=400)
+    sns.catplot(x="Model", y=scoring, hue="Language", col="Normalized", row="Sampling Mode",
+                sharey=True, sharex=True, data=df[df["Test size"]== test_size], kind="bar")
+    plt.suptitle("%s - for different models - test size %f" % (scoring, test_size))
+    plt.savefig(os.path.join(os.getcwd(), "data", "ML Results", "%s_Test_size_%f.png" % ( scoring, test_size)), dpi=400)
 
-supervised_ML()
