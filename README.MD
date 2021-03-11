@@ -21,14 +21,14 @@ the remaining workflow is still operational!
     - Alternatively, a different POS Tagger and Lemmatizer can be used, by changing the implementation slightly.
     The relevant function can be found at Helper/Helper_function.py, called POS_tagger.
 - Clone github repository
-- install all necessary dependencies (using conda)\
-        conda env create -f environment.yml
+- install all necessary dependencies (conda env create -f environment.yml)
 - running the application:
     - It is recommended to keep the folder structure suggested below.
         - Otherwise quite some paths have to be adapted
     - make sure that your current working directory is at the same level as the main.py script
     - As mentioned earlier, this tool provides a download possibility for the gutenberg project,
     although this is not possible from a german Network address! (at least in March 2021)
+        -   Note that this process requires 10h + 
     - with bool variables, it can be checked, which folders should be processed.
     - If some of the dependencies are not given, set them to None (for each language where it is applicable)
 - for specifics, each function is labeled as what its input is and what it does    
