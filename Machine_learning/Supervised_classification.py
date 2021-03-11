@@ -219,7 +219,6 @@ def undersampling(df, Languages=["en", "de"], classes=[0, 1], binary_label="bina
     return df_both_Languages
 
 
-# TODO: Finish documentation - this file and Regression!!
 def fit_classifier(df, classifier, Language, non_feature_list, binary_label, normalized, test_size, sampling_mode):
     """
     Fit a model to the given data in df, and return the fitted model
